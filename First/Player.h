@@ -13,13 +13,15 @@ private:
 	int id; 
 	int type; // type can be attacker=0 or squire =1
 	int healthPoints;
+	int teamNum; 
+	int x, y;
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
 	int mode; // mode can be survival=1 or attack=0 
 	// Team * team;
 
 public :
-	Player(int id, int type);
+	Player(int x , int y, int id, int type, int teamNum);
 
 	void searchEnemy();
 	void checkHealth();

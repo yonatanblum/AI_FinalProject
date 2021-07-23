@@ -8,13 +8,15 @@
 #include "CompareCells.h"
 #include "Bullet.h"
 #include "Granade.h"
-
+#include<windows.h>
+#include "Player.h"
 
 using namespace std;
 
 
 
 const int NUM_ROOMS = 12;
+const int NUM_TEAM_PLAYERS = 5; 
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -22,10 +24,12 @@ double security_map [MSZ][MSZ] = { 0 };
 Room rooms[NUM_ROOMS];
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
+Player allPlayers[2 * NUM_TEAM_PLAYERS];
 
 void InitMaze();
 void InitRooms();
 void DigTunnels();
+void InitPlayers(int teamNum);
 
 
 void init()
@@ -45,6 +49,8 @@ void init()
 		maze[r][c] = WALL;
 	}
 	DigTunnels();
+	InitPlayers(PLAYER1 );
+	InitPlayers(PLAYER2);
 }
 
 void InitMaze()
@@ -88,6 +94,20 @@ void InitRooms()
 			rooms[i].SetWidth(w);
 			rooms[i].SetHeight(h);
 			rooms[i].FillRoom(maze, SPACE);
+	}
+
+}
+
+
+void InitPlayers(int teamNum )
+{
+	cout << "----------------Add players to maze -------------" << endl;
+	int roomIndex;
+	for (int i = 0; i < NUM_TEAM_PLAYERS; i++)
+	{
+		roomIndex = rand() % NUM_ROOMS;
+		cout << "roomIndex=" << roomIndex << endl;
+		rooms[roomIndex].AddPlayer(maze, teamNum );
 	}
 }
 
@@ -350,11 +370,13 @@ void display()
 	if (pg)
 		pg->Show();
 
+	
 	glutSwapBuffers(); // show all
 }
 
 void idle()
 {
+	
 	if (pb != nullptr)
 	{
 		if (pb->getIsFired())
@@ -365,6 +387,7 @@ void idle()
 	{
 		pg->Exploding(maze);
 	}
+
 	glutPostRedisplay(); // go to display
 }
 
