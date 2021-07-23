@@ -27,6 +27,7 @@ void InitMaze();
 void InitRooms();
 void DigTunnels();
 
+//sddd
 void init()
 {
 	int r, c;
