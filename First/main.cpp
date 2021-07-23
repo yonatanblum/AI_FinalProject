@@ -318,7 +318,14 @@ void DrawMaze()
 			case PATH:
 				glColor3d(1, 0.6, 1);
 				break;
+			case PLAYER1:
+				glColor3d(0, 0.9, 0.9); // turquoise
+				break;
+			case PLAYER2:
+				glColor3d(0.9, 0.4, 0.5); // light red
+				break;
 			}
+
 			// draw square
 			x = 2.0 * (j * xsz) / W - 1; // value in range [-1,1)
 			y = 2.0 * (i * ysz) / H - 1; // value in range [-1,1)
