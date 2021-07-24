@@ -8,26 +8,34 @@
 #include "CompareCells.h"
 #include "Bullet.h"
 #include "Granade.h"
-
+#include<windows.h>
+#include "Player.h"
 
 using namespace std;
 
 
 
 const int NUM_ROOMS = 12;
+const int NUM_TEAM_PLAYERS = 5; 
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
 
+bool runGame = false;
+
 Room rooms[NUM_ROOMS];
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
+Player allPlayers1[NUM_TEAM_PLAYERS];
+Player allPlayers2[NUM_TEAM_PLAYERS];
 
 void InitMaze();
 void InitRooms();
 void DigTunnels();
+void InitPlayers(Player* allPlayers,int teamNum);
+void AddPlayerToMaze(Player* allPlayers, int id, int teamNum, int roomIndex);
 
-//sddd
+
 void init()
 {
 	int r, c;
@@ -45,6 +53,8 @@ void init()
 		maze[r][c] = WALL;
 	}
 	DigTunnels();
+	InitPlayers(allPlayers1,PLAYER1);
+	InitPlayers(allPlayers2,PLAYER2);
 }
 
 void InitMaze()
@@ -89,6 +99,35 @@ void InitRooms()
 			rooms[i].SetHeight(h);
 			rooms[i].FillRoom(maze, SPACE);
 	}
+
+}
+
+
+void InitPlayers(Player* allPlayers ,int teamNum )
+{
+	cout << "----------------Add players to maze -------------" << endl;
+	int roomIndex;
+	for (int i = 0; i < NUM_TEAM_PLAYERS; i++)
+	{
+		roomIndex = rand() % NUM_ROOMS;
+		cout << "roomIndex=" << roomIndex << endl;
+		
+		AddPlayerToMaze(allPlayers,i, teamNum, roomIndex);
+		
+	}
+}
+
+
+void AddPlayerToMaze(Player* allPlayers,int id,int teamNum, int roomIndex)
+{
+	int* res = rooms[roomIndex].getRandPosition(maze);
+	int r = res[0], c = res[1];
+	maze[r][c] = teamNum;
+	cout << "r : " << r << ", c : " << c << endl;
+	allPlayers[id].setPosition(r, c);
+	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
+		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
+	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
 }
 
 void DigPath(Cell* pn)
@@ -284,6 +323,14 @@ void CreateSecurityMap()
 	}
 }
 
+void RunGame()
+{
+	for (int i = 0; i < NUM_TEAM_PLAYERS; i++)
+	{
+
+	}
+}
+
 void DrawMaze()
 {
 	int i, j;
@@ -318,7 +365,14 @@ void DrawMaze()
 			case PATH:
 				glColor3d(1, 0.6, 1);
 				break;
+			case PLAYER1:
+				glColor3d(0, 0.9, 0.9); // turquoise
+				break;
+			case PLAYER2:
+				glColor3d(0.9, 0.4, 0.5); // light red
+				break;
 			}
+
 			// draw square
 			x = 2.0 * (j * xsz) / W - 1; // value in range [-1,1)
 			y = 2.0 * (i * ysz) / H - 1; // value in range [-1,1)
@@ -343,11 +397,13 @@ void display()
 	if (pg)
 		pg->Show();
 
+	
 	glutSwapBuffers(); // show all
 }
 
 void idle()
 {
+	
 	if (pb != nullptr)
 	{
 		if (pb->getIsFired())
@@ -358,6 +414,8 @@ void idle()
 	{
 		pg->Exploding(maze);
 	}
+
+	if (runGame) RunGame();
 	glutPostRedisplay(); // go to display
 }
 
@@ -376,6 +434,10 @@ void menu(int choice)
 	else if (choice == 3) // create security map
 	{
 		CreateSecurityMap();
+	}
+	else if (choice == 4) // create security map
+	{
+		runGame = true;
 	}
 
 }
@@ -411,6 +473,7 @@ void main(int argc, char* argv[])
 	glutAddMenuEntry("Fire bullet", 1);
 	glutAddMenuEntry("Throw grenade", 2);
 	glutAddMenuEntry("Create Security Map", 3);
+	glutAddMenuEntry("Start Game", 4);
 
 	init();
 

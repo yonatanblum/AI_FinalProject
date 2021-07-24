@@ -9,6 +9,8 @@ const int TARGET = 3;
 const int BLACK = 4; // visited
 const int GRAY = 5;
 const int PATH = 6;
+const int PLAYER1 = 7; 
+const int PLAYER2 = 8;
 
 class Definitions
 {
