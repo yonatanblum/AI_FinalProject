@@ -21,7 +21,8 @@ private:
 	// Team * team;
 
 public :
-	Player(int x , int y, int id, int type, int teamNum);
+	Player(int x , int y, int id, int type, int teamNum );
+	Player();
 
 	void searchEnemy();
 	void checkHealth();
@@ -33,6 +34,8 @@ public :
 	void move();
 	void heal(int points);
 
+	void setPosition(int x, int y);
+	void setPlayer(int id,int  type, int teamNum);
 
 };
 

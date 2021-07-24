@@ -23,3 +23,31 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	mode=0; // mode can be survival=1 or attack=0 
 }
 
+Player::Player()
+{
+	this->healthPoints = MAX_HEALTH;
+
+	for (int i = 0; i < MAX_GRANADES; i++)
+	{
+		granades[i] = new Granade(0, 0); //TODO need to change x and y to the player position or to target shot
+	}
+
+	for (int i = 0; i < NUM_PLAYER_BULLETS; i++)
+	{
+		bullets[i] = new Bullet(0, 0); //TODO need to change x and y to the player position or to target shot
+	}
+}
+
+void Player::setPosition(int x, int y)
+{
+	this->x = x;
+	this->y = y;
+	mode = 0; // mode can be survival=1 or attack=0 
+}
+
+void Player::setPlayer(int id, int  type, int teamNum)
+{
+	this->id = id;
+	this->type = type; // type can be attacker=0 or squire =1
+	this->teamNum = teamNum;
+}
