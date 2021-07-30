@@ -2,7 +2,7 @@
 #include "GLUT.H"
 #include <math.h>
 
-Bullet::Bullet(double x, double y)
+Bullet::Bullet(double x, double y)// 1234
 {
 	this->x = x;
 	this->y = y;
