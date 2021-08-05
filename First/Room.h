@@ -1,6 +1,7 @@
 #pragma once
 #include "Definitions.h"
 #include "Player.h"
+#include "Storage.h"
 
 class Room
 {
