@@ -22,5 +22,8 @@ public:
 	bool isValidCellForNewPlayer(int maze[MSZ][MSZ], int r, int c);
 	//void AddPlayer(int maze[MSZ][MSZ], int color , Player p);
 	int* getRandPosition(int maze[MSZ][MSZ]);
+	bool isValidCell(int maze[MSZ][MSZ], int r, int c);		///
+	int* getRandPositionForStore(int maze[MSZ][MSZ]);		///
+
 };
 
