@@ -10,6 +10,8 @@
 #include "Granade.h"
 #include<windows.h>
 #include "Player.h"
+#include "Storage.h"											
+
 
 using namespace std;
 
@@ -17,6 +19,7 @@ using namespace std;
 
 const int NUM_ROOMS = 12;
 const int NUM_TEAM_PLAYERS = 5; 
+const int STORE_IN_ROOM = 2;									
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -24,6 +27,8 @@ double security_map [MSZ][MSZ] = { 0 };
 bool runGame = false;
 
 Room rooms[NUM_ROOMS];
+Storage ammoStore[NUM_ROOMS][STORE_IN_ROOM];			// 12x2				
+Storage medicineStore[NUM_ROOMS][STORE_IN_ROOM];		// 12x2			
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
 Player allPlayers1[NUM_TEAM_PLAYERS];
@@ -34,6 +39,8 @@ void InitRooms();
 void DigTunnels();
 void InitPlayers(Player* allPlayers,int teamNum);
 void AddPlayerToMaze(Player* allPlayers, int id, int teamNum, int roomIndex);
+void initAllStorages();																		
+void addAllStoragesToRoom(int roomNum);														
 
 
 void init()
@@ -55,6 +62,7 @@ void init()
 	DigTunnels();
 	InitPlayers(allPlayers1,PLAYER1);
 	InitPlayers(allPlayers2,PLAYER2);
+	initAllStorages();															///
 }
 
 void InitMaze()
@@ -128,6 +136,32 @@ void AddPlayerToMaze(Player* allPlayers,int id,int teamNum, int roomIndex)
 	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
 		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
 	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
+}
+
+void initAllStorages()																				///
+{
+	for (int i = 0; i < NUM_ROOMS; i++)
+		addAllStoragesToRoom(i);
+}
+
+void addAllStoragesToRoom(int roomNum)																///
+{
+	int* res;
+	int r, c;
+	for (int storeNum = 0; storeNum < 2; storeNum++)
+	{
+		res = rooms[roomNum].getRandPositionForStore(maze);
+		r = res[0], c = res[1];
+		ammoStore[roomNum][storeNum] = Storage(Ammo, r, c);
+		ammoStore[roomNum][storeNum].drawStorage(Ammo, r, c, maze);
+	}
+	for (int storeNum = 0; storeNum < 2; storeNum++)
+	{
+		res = rooms[roomNum].getRandPositionForStore(maze);
+		r = res[0], c = res[1];
+		medicineStore[roomNum][storeNum] = Storage(Medicines, r, c);
+		medicineStore[roomNum][storeNum].drawStorage(Medicines, r, c, maze);
+	}
 }
 
 void DigPath(Cell* pn)
@@ -370,6 +404,12 @@ void DrawMaze()
 				break;
 			case PLAYER2:
 				glColor3d(0.9, 0.4, 0.5); // light red
+				break;
+			case AMMO_STORE:
+				glColor3d(1, 0.6, 0); // orange?
+				break;
+			case MEDICINE_STORE:
+				glColor3d(1, 1, 0); // yellow
 				break;
 			}
 
