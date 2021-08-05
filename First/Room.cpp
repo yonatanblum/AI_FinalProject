@@ -42,3 +42,21 @@ int* Room::getRandPosition(int maze[MSZ][MSZ])
 	} while (!isValidCellForNewPlayer(maze, res[0], res[1]));
 	return res;
 }
+
+bool Room::isValidCell(int maze[MSZ][MSZ], int r, int c)							
+{
+	if (maze[r][c] != SPACE || maze[r+1][c] != SPACE || maze[r][c+1] != SPACE || maze[r+1][c+1] != SPACE)
+		return false;
+	return true;
+}
+
+int* Room::getRandPositionForStore(int maze[MSZ][MSZ])
+{
+	int res[2] = { 0 };
+	do
+	{
+		res[0] = (rand() % height) + (centerRow - height / 2);
+		res[1] = (rand() % width) + (centerCol - width / 2);
+	} while (!isValidCell(maze, res[0], res[1]));
+	return res;
+}
