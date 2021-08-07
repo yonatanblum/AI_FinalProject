@@ -21,19 +21,22 @@ const int NUM_TEAM_PLAYERS = 5;
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
 
-bool runGame = false;
+bool runGame = false, runPlayer;
 
+vector <Cell*> grayss[NUM_TEAM_PLAYERS*2];
 Room rooms[NUM_ROOMS];
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
-Player allPlayers1[NUM_TEAM_PLAYERS];
-Player allPlayers2[NUM_TEAM_PLAYERS];
+Player allPlayers[NUM_TEAM_PLAYERS*2];
+
 
 void InitMaze();
 void InitRooms();
 void DigTunnels();
-void InitPlayers(Player* allPlayers,int teamNum);
-void AddPlayerToMaze(Player* allPlayers, int id, int teamNum, int roomIndex);
+void InitPlayers();
+void AddPlayerToMaze(int id, int teamNum, int roomIndex);
+int getTeamNum(int ix);
+void CheckNeighborTarget(Cell* pcurrent, int row, int col, int targetTeam, int teamNum, int ix);
 
 
 void init()
@@ -53,8 +56,8 @@ void init()
 		maze[r][c] = WALL;
 	}
 	DigTunnels();
-	InitPlayers(allPlayers1,PLAYER1);
-	InitPlayers(allPlayers2,PLAYER2);
+	InitPlayers();
+	//InitPlayers(allPlayers2,PLAYER2);
 }
 
 void InitMaze()
@@ -68,10 +71,217 @@ void InitMaze()
 		}
 }
 
+
+
+void InitPlayers()
+{
+	cout << "----------------Add players to maze -------------" << endl;
+	int roomIndex;
+	int teamNum;
+	for (int i = 0; i < NUM_TEAM_PLAYERS*2; i++)
+	{
+		roomIndex = rand() % NUM_ROOMS;
+		cout << "roomIndex=" << roomIndex << endl;
+		if (i >= NUM_TEAM_PLAYERS) teamNum = PLAYER2;
+		else teamNum = PLAYER1;
+		AddPlayerToMaze(i, teamNum, roomIndex);
+		
+	}
+	
+}
+
+
+void AddPlayerToMaze(int id,int teamNum, int roomIndex)
+{
+	int* res = rooms[roomIndex].getRandPosition(maze);
+	int r = res[0], c = res[1];
+	maze[r][c] = teamNum;
+	cout << "r : " << r << ", c : " << c << endl;
+	allPlayers[id].setPosition(r, c);
+	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
+		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
+	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
+	Cell* pc = new Cell(r, c, nullptr,9999.0,0);
+	grayss[id].push_back(pc);
+}
+
+void ClearMaze(int id, int teamNum)
+{
+	int i, j;
+
+	for (i = 1; i < MSZ - 1; i++)
+		for (j = 1; j < MSZ - 1; j++)
+		{
+			if (maze[i][j] == BLACK || maze[i][j] == GRAY || maze[i][j] == PATH)
+			{
+				maze[i][j] = SPACE;
+			}
+
+		}
+
+	for (i = 0; i < NUM_TEAM_PLAYERS*2; i++) {
+		maze[allPlayers[id].getRow()][allPlayers[id].getCol()] = teamNum;
+	}
+	// mark out the start and the target cells
+
+}
+void MoveToCell(Cell* pcurrent , int id , int teamNum)
+{
+	while (maze[pcurrent->GetRow()][pcurrent->GetColumn()] != teamNum)
+	{
+
+		Cell* next = pcurrent->GetParent();
+
+		if (maze[next->GetRow()][next->GetColumn()] == teamNum)
+		{
+			int r = allPlayers[id].getRow();
+			int c = allPlayers[id].getCol();
+			allPlayers[id].setPosition(pcurrent->GetRow(), pcurrent->GetColumn())  ;
+			maze[r][c] = teamNum;
+			Cell* pc = new Cell(*pcurrent);
+			grayss[id].clear();
+			grayss[id].push_back(pc); // the start cell is in grays
+		//}
+
+
+		}
+		pcurrent = pcurrent->GetParent();
+	}
+	maze[pcurrent->GetRow()][pcurrent->GetColumn()] = SPACE;
+}
+
+int getTeamNum(int ix)
+{
+	if (ix >= NUM_TEAM_PLAYERS) {
+		return PLAYER2;
+	}
+	return PLAYER1;
+}
+
+int getTeamTarget(int ix)
+{
+	if (ix >= NUM_TEAM_PLAYERS) {
+		return PLAYER1;
+	}
+	return PLAYER2;
+}
+
+
+void AStarIteration(int runIndex, int teamNum, int targetTeam)
+{
+	
+	Cell* pcurrent;
+
+	if (grayss[runIndex].empty())
+	{
+		cout << "There is no solution\n";
+	}
+	else // there are gray cells
+	{
+		int index = 0;
+		pcurrent = grayss[runIndex].front();  // save the FIRST element,
+		for (int i = 1; i < grayss[runIndex].size(); i++) // find best route (find min F from array) 
+		{
+			double f1 = pcurrent->GetH();
+			double f2 = grayss[runIndex][i]->GetH();
+			if (f1 > f2)
+			{
+				pcurrent = grayss[runIndex][i];
+				index = i;
+			}
+		}
+		grayss[runIndex].erase(grayss[runIndex].begin() + index); // remove it from the queue
+		if (maze[pcurrent->GetRow()][pcurrent->GetColumn()] != teamNum)
+			maze[pcurrent->GetRow()][pcurrent->GetColumn()] = BLACK;   // and paint it black
+
+		// now check the neighbors
+		// up
+		CheckNeighborTarget(pcurrent, pcurrent->GetRow() + 1, pcurrent->GetColumn(), targetTeam, teamNum, runIndex);
+		// down
+		if (runPlayer)
+			CheckNeighborTarget(pcurrent, pcurrent->GetRow() - 1, pcurrent->GetColumn(), targetTeam, teamNum, runIndex);
+		// right
+		if (runPlayer)
+			CheckNeighborTarget(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() + 1, targetTeam, teamNum, runIndex);
+		// left
+		if (runPlayer)
+			CheckNeighborTarget(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() - 1, targetTeam, teamNum, runIndex);
+	}
+
+}
+void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int teamNum,int ix)
+{
+	// check the color of the neighbor cell
+
+	if (maze[row][col] == SPACE || maze[row][col] == targetTeam /* || (row != allPlayers[ix].getRow() && col != allPlayers[ix].getCol() && maze[row][col] == teamNum)*/)
+	{
+		if (maze[row][col] == targetTeam ) // the solution has been found
+		{
+			if (maze[pcurrent->GetRow()][pcurrent->GetColumn()] == teamNum) // 1 step before pacman
+			{
+				runGame = false;
+			}
+
+			//cout << "the solution has been found\n";
+			MoveToCell(pcurrent,ix, teamNum);
+			ClearMaze(ix,teamNum);
+
+			runPlayer = false;
+			
+		/*	if (runIndex < NUM_OF_GHOSTS)
+				runIndex++;
+			else runIndex = 0;*/
+
+
+		}
+
+		else  // it is white neighbor, so make it gray
+		{
+			int tId = 6;
+			int g = pcurrent->GetG() + 1;
+			double h = sqrt(pow(allPlayers[tId].getRow() - row, 2) + pow(allPlayers[tId].getCol() - col, 2));
+			Cell* pc = new Cell(row, col, pcurrent, h, g);
+			grayss[ix].push_back(pc);
+			maze[row][col] = GRAY;
+		}
+	}
+}
+
+
+void DoAction(int runIndex)
+{
+	int teamNum = getTeamNum(runIndex);
+	int targetTeam= getTeamTarget(runIndex);
+	
+	if (allPlayers[runIndex].getType() == 0) // attacker 
+	{
+		runPlayer = true;
+		while (runPlayer)
+		{
+		AStarIteration(runIndex,teamNum,targetTeam);
+		}
+	}
+}
+
+void RunGame()
+{
+	//for (int i = 0; i < NUM_TEAM_PLAYERS*2; i++)
+	for (int i = 1; i < 3; i++)
+	{
+		DoAction(i);
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+//----------------------------------------CREATE MAZE----------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+
 bool HasOverlap(int r, int c, int h, int w)
 {
-	for (int i = r - h / 2-1; i <= r + h / 2+1; i++)
-		for (int j = c - w / 2-1; j <= c + w / 2+1; j++)
+	for (int i = r - h / 2 - 1; i <= r + h / 2 + 1; i++)
+		for (int j = c - w / 2 - 1; j <= c + w / 2 + 1; j++)
 			if (maze[i][j] == SPACE)
 				return true;
 
@@ -82,52 +292,24 @@ void InitRooms()
 {
 	int i;
 	int row, col, w, h;
-	int minW=10, minH=10;
+	int minW = 10, minH = 10;
 
 	for (i = 0; i < NUM_ROOMS; i++)
 	{
 		do
 		{
-			row = 8+minH/2 + rand() % (MSZ - minH-16);
-			col = 8+minW/2+ rand() % (MSZ - minW-16);
+			row = 8 + minH / 2 + rand() % (MSZ - minH - 16);
+			col = 8 + minW / 2 + rand() % (MSZ - minW - 16);
 			w = minW - 2 + rand() % 20;
 			h = minH - 2 + rand() % 20;
-		} while (HasOverlap(row,col,h,w));
-			rooms[i].SetCenterRow(row);
-			rooms[i].SetCenterCol(col);
-			rooms[i].SetWidth(w);
-			rooms[i].SetHeight(h);
-			rooms[i].FillRoom(maze, SPACE);
+		} while (HasOverlap(row, col, h, w));
+		rooms[i].SetCenterRow(row);
+		rooms[i].SetCenterCol(col);
+		rooms[i].SetWidth(w);
+		rooms[i].SetHeight(h);
+		rooms[i].FillRoom(maze, SPACE);
 	}
 
-}
-
-
-void InitPlayers(Player* allPlayers ,int teamNum )
-{
-	cout << "----------------Add players to maze -------------" << endl;
-	int roomIndex;
-	for (int i = 0; i < NUM_TEAM_PLAYERS; i++)
-	{
-		roomIndex = rand() % NUM_ROOMS;
-		cout << "roomIndex=" << roomIndex << endl;
-		
-		AddPlayerToMaze(allPlayers,i, teamNum, roomIndex);
-		
-	}
-}
-
-
-void AddPlayerToMaze(Player* allPlayers,int id,int teamNum, int roomIndex)
-{
-	int* res = rooms[roomIndex].getRandPosition(maze);
-	int r = res[0], c = res[1];
-	maze[r][c] = teamNum;
-	cout << "r : " << r << ", c : " << c << endl;
-	allPlayers[id].setPosition(r, c);
-	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
-		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
-	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
 }
 
 void DigPath(Cell* pn)
@@ -140,8 +322,8 @@ void DigPath(Cell* pn)
 	}
 }
 
-void CheckNeighbor(Cell* pn, vector <Cell> &grays, vector <Cell> &blacks, priority_queue<Cell, 
-	vector<Cell>, CompareCells> &pq, bool &go_on)
+void CheckNeighborDig(Cell* pn, vector <Cell>& grays, vector <Cell>& blacks, priority_queue<Cell,
+	vector<Cell>, CompareCells>& pq, bool& go_on)
 {
 	vector<Cell>::iterator it_gray;
 	vector<Cell>::iterator it_black;
@@ -149,7 +331,7 @@ void CheckNeighbor(Cell* pn, vector <Cell> &grays, vector <Cell> &blacks, priori
 	Cell* pc;
 	// is it Target?
 	if (pn->GetH() < 0.01) // this is the target! In our case this means the end of A*.
-	{ 
+	{
 		go_on = false;
 		DigPath(pn);
 		return;
@@ -168,13 +350,13 @@ void CheckNeighbor(Cell* pn, vector <Cell> &grays, vector <Cell> &blacks, priori
 		{
 			if (pn->GetG() < it_gray->GetG()) // we have to update G and F in grays and we have to update pq
 			{
-//				it_gray->SetG(pn->GetG()); // update G of a copy that is in grays
-//				it_gray->ComputeF(); // ???
+				//				it_gray->SetG(pn->GetG()); // update G of a copy that is in grays
+				//				it_gray->ComputeF(); // ???
 				*it_gray = *pn;
 
 				// update pq;
 				pc = new Cell(pq.top());
-				while (!pq.empty() && !( pc->GetRow() == pn->GetRow() && pc->GetColumn() == pn->GetColumn()))
+				while (!pq.empty() && !(pc->GetRow() == pn->GetRow() && pc->GetColumn() == pn->GetColumn()))
 				{
 					pq.pop();
 					tmp.push_back(*pc);
@@ -208,11 +390,11 @@ void PaveWay(int i, int j)
 	Cell* pneighbor;
 	bool go_on = true;
 
-	double wall_cost=3, space_cost=0.1,cost;
+	double wall_cost = 3, space_cost = 0.1, cost;
 
 	// starting cell is the center of the room i, target cell is the center of the room j
-	Cell start = *(new Cell(rooms[i].GetCenterRow(),rooms[i].GetCenterCol(),nullptr, 
-											rooms[j].GetCenterRow(), rooms[j].GetCenterCol(),0));
+	Cell start = *(new Cell(rooms[i].GetCenterRow(), rooms[i].GetCenterCol(), nullptr,
+		rooms[j].GetCenterRow(), rooms[j].GetCenterCol(), 0));
 	pq.push(start);
 	grays.push_back(start);
 
@@ -248,11 +430,11 @@ void PaveWay(int i, int j)
 					cost = wall_cost;
 				else
 					cost = space_cost; // space or target
-			
-				pneighbor = new Cell(pcurrent->GetRow()+1,pcurrent->GetColumn(),pcurrent,
-					rooms[j].GetCenterRow(), rooms[j].GetCenterCol(),pcurrent->GetG()+cost);
 
-				CheckNeighbor(pneighbor, grays, blacks, pq, go_on);
+				pneighbor = new Cell(pcurrent->GetRow() + 1, pcurrent->GetColumn(), pcurrent,
+					rooms[j].GetCenterRow(), rooms[j].GetCenterCol(), pcurrent->GetG() + cost);
+
+				CheckNeighborDig(pneighbor, grays, blacks, pq, go_on);
 			}
 			if (go_on && pcurrent->GetRow() > 0) // down
 			{
@@ -264,21 +446,21 @@ void PaveWay(int i, int j)
 				pneighbor = new Cell(pcurrent->GetRow() - 1, pcurrent->GetColumn(), pcurrent,
 					rooms[j].GetCenterRow(), rooms[j].GetCenterCol(), pcurrent->GetG() + cost);
 
-				CheckNeighbor(pneighbor, grays, blacks, pq, go_on);
+				CheckNeighborDig(pneighbor, grays, blacks, pq, go_on);
 			}
 			if (go_on && pcurrent->GetColumn() > 0) // left
 			{
-				if (maze[pcurrent->GetRow() ][pcurrent->GetColumn()- 1] == WALL)
+				if (maze[pcurrent->GetRow()][pcurrent->GetColumn() - 1] == WALL)
 					cost = wall_cost;
 				else
 					cost = space_cost; // space or target
 
-				pneighbor = new Cell(pcurrent->GetRow() , pcurrent->GetColumn()- 1, pcurrent,
+				pneighbor = new Cell(pcurrent->GetRow(), pcurrent->GetColumn() - 1, pcurrent,
 					rooms[j].GetCenterRow(), rooms[j].GetCenterCol(), pcurrent->GetG() + cost);
 
-				CheckNeighbor(pneighbor, grays, blacks, pq, go_on);
+				CheckNeighborDig(pneighbor, grays, blacks, pq, go_on);
 			}
-			if (go_on && pcurrent->GetColumn() < MSZ-1) // left
+			if (go_on && pcurrent->GetColumn() < MSZ - 1) // left
 			{
 				if (maze[pcurrent->GetRow()][pcurrent->GetColumn() + 1] == WALL)
 					cost = wall_cost;
@@ -288,7 +470,7 @@ void PaveWay(int i, int j)
 				pneighbor = new Cell(pcurrent->GetRow(), pcurrent->GetColumn() + 1, pcurrent,
 					rooms[j].GetCenterRow(), rooms[j].GetCenterCol(), pcurrent->GetG() + cost);
 
-				CheckNeighbor(pneighbor, grays, blacks, pq, go_on);
+				CheckNeighborDig(pneighbor, grays, blacks, pq, go_on);
 			}
 
 
@@ -316,21 +498,20 @@ void CreateSecurityMap()
 	double x, y;
 	for (int i = 0; i < num_simulations; i++)
 	{
-		x =-1+2* (rand() % 100)/100.0;
+		x = -1 + 2 * (rand() % 100) / 100.0;
 		y = -1 + 2 * (rand() % 100) / 100.0;
 		pg = new Granade(x, y);
 		pg->SimulateExplosion(maze, security_map, one_bullet_hurt);
 	}
 }
 
-void RunGame()
-{
-	for (int i = 0; i < NUM_TEAM_PLAYERS; i++)
-	{
 
-	}
-}
 
+//---------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+//----------------------------------------CONFIGURATION MAZE----------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 void DrawMaze()
 {
 	int i, j;

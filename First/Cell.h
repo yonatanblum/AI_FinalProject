@@ -10,6 +10,7 @@ public:
 	Cell(const Cell& other);
 	Cell(int r, int c, Cell* p);
 	Cell(int r, int c, Cell* p, int tr, int tc,double g);
+	Cell(int r, int c, Cell* p, double h = -1, int g = 0);
 	int GetRow() { return row; }
 	int GetColumn() { return column; }
 	Cell* GetParent() { return parent; }

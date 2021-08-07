@@ -37,5 +37,10 @@ public :
 	void setPosition(int x, int y);
 	void setPlayer(int id,int  type, int teamNum);
 
+	int getType() { return type; };
+	int getRow() { return x; };
+	int getCol() { return y; };
+	int getId() { return id; };
+
 };
 
