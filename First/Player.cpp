@@ -1,4 +1,5 @@
 #include "Player.h"
+#include <iostream>
 
 
 Player::Player(int x, int y ,int id, int type , int teamNum)
@@ -7,8 +8,8 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	this->type = type; // type can be attacker=0 or squire =1
 	this->healthPoints = MAX_HEALTH;
 	this->teamNum = teamNum;
-	this->x = x;
-	this->y = y;
+	this->row = x;
+	this->col = y;
 
 	for (int i= 0; i < MAX_GRANADES ;i++)
 	{
@@ -40,8 +41,8 @@ Player::Player()
 
 void Player::setPosition(int x, int y)
 {
-	this->x = x;
-	this->y = y;
+	this->row = x;
+	this->col = y;
 	mode = 0; // mode can be survival=1 or attack=0 
 }
 
@@ -50,4 +51,25 @@ void Player::setPlayer(int id, int  type, int teamNum)
 	this->id = id;
 	this->type = type; // type can be attacker=0 or squire =1
 	this->teamNum = teamNum;
+}
+
+int Player::searchEnemy(Player * allPlayers, int maxPlayers)
+{
+	int nearest = this->id;
+	int minDist = 99999;
+	int dist;
+	for (int i= 0 ; i< maxPlayers;i++)
+	{
+		if (allPlayers[i].getTeamNum() != this->teamNum && allPlayers[i].getHealthPoints()!=0)
+		{
+			 dist = sqrt(pow(allPlayers[i].getRow() - this->row, 2) + pow(allPlayers[i].getCol() - this->col, 2));
+			 if (dist < minDist)
+			 {
+				 minDist = dist;
+				 nearest = i; 
+			 }
+		}
+	}
+	if (nearest == this->id) return -1;
+	return nearest;
 }

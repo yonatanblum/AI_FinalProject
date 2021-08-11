@@ -14,18 +14,18 @@ private:
 	int type; // type can be attacker=0 or squire =1
 	int healthPoints;
 	int teamNum; 
-	int x, y;
+	int row, col;
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
 	int mode; // mode can be survival=1 or attack=0 
-	// Team * team;
+
 
 public :
 	Player(int x , int y, int id, int type, int teamNum );
 	Player();
 
-	void searchEnemy();
-	void checkHealth();
+	int searchEnemy(Player* allPlayers , int maxPlayers);
+	//void checkHealth();
 	void escape();
 	void ammoRefill();
 	void improvingHealthPoints();
@@ -36,6 +36,13 @@ public :
 
 	void setPosition(int x, int y);
 	void setPlayer(int id,int  type, int teamNum);
+
+	int getType() { return type; };
+	int getRow() { return row; };
+	int getCol() { return col; };
+	int getId() { return id; };
+	int getTeamNum() { return teamNum; };
+	int getHealthPoints() { return healthPoints; };
 
 };
 

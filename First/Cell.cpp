@@ -38,6 +38,16 @@ Cell::Cell(const Cell &other) {
 	ComputeF();
 }
 
+Cell::Cell(int r, int c, Cell* p, double h, int g)
+{
+	row = r;
+	column = c;
+	parent = p;
+	this->h = h;
+	this->g = g;
+
+}
+
 void Cell::ComputeH()
 {
 	// Euclidus distance
