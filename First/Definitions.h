@@ -11,6 +11,8 @@ const int GRAY = 5;
 const int PATH = 6;
 const int PLAYER1 = 7; 
 const int PLAYER2 = 8;
+const int AMMO_STORE = 9;
+const int MEDICINE_STORE = 10;
 
 class Definitions
 {
