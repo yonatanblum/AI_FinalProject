@@ -209,7 +209,7 @@ void AStarIteration(int runIndex, int teamNum, int targetTeam)
 	}
 
 }
-void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int teamNum,int ix)
+void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int teamNum,int id)
 {
 	// check the color of the neighbor cell
 
@@ -223,8 +223,8 @@ void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int 
 			}
 
 			//cout << "the solution has been found\n";
-			MoveToCell(pcurrent,ix, teamNum);
-			ClearMaze(ix,teamNum);
+			MoveToCell(pcurrent,id, teamNum);
+			ClearMaze(id,teamNum);
 
 			runPlayer = false;
 			
@@ -237,11 +237,12 @@ void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int 
 
 		else  // it is white neighbor, so make it gray
 		{
-			int tId = 6;
+			//int tId = 6;
+			int tId = allPlayers[id].searchEnemy(allPlayers, NUM_TEAM_PLAYERS*2);
 			int g = pcurrent->GetG() + 1;
 			double h = sqrt(pow(allPlayers[tId].getRow() - row, 2) + pow(allPlayers[tId].getCol() - col, 2));
 			Cell* pc = new Cell(row, col, pcurrent, h, g);
-			grayss[ix].push_back(pc);
+			grayss[id].push_back(pc);
 			maze[row][col] = GRAY;
 		}
 	}
@@ -265,8 +266,8 @@ void DoAction(int runIndex)
 
 void RunGame()
 {
-	//for (int i = 0; i < NUM_TEAM_PLAYERS*2; i++)
-	for (int i = 1; i < 3; i++)
+	for (int i = 0; i < NUM_TEAM_PLAYERS*2; i++)
+	//for (int i = 1; i < 3; i++)
 	{
 		DoAction(i);
 	}
