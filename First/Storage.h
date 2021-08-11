@@ -7,7 +7,6 @@
 const int MAX_MEDICINES = 500;
 const int MAX_BULLETS = 300;
 const int MAXIMUM_GRANADES = 50;
-const double RADIUS = 0.03;
 
 enum storageType { Ammo, Medicines };
 

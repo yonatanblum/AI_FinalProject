@@ -19,7 +19,7 @@ using namespace std;
 
 const int NUM_ROOMS = 12;
 const int NUM_TEAM_PLAYERS = 5; 
-const int STORE_IN_ROOM = 2;									
+const int STORE_IN_ROOM = 1;									
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -339,14 +339,14 @@ void addAllStoragesToRoom(int roomNum)																///
 {
 	int* res;
 	int r, c;
-	for (int storeNum = 0; storeNum < 2; storeNum++)
+	for (int storeNum = 0; storeNum < STORE_IN_ROOM; storeNum++)
 	{
 		res = rooms[roomNum].getRandPositionForStore(maze);
 		r = res[0], c = res[1];
 		ammoStore[roomNum][storeNum] = Storage(Ammo, r, c);
 		ammoStore[roomNum][storeNum].drawStorage(Ammo, r, c, maze);
 	}
-	for (int storeNum = 0; storeNum < 2; storeNum++)
+	for (int storeNum = 0; storeNum < STORE_IN_ROOM; storeNum++)
 	{
 		res = rooms[roomNum].getRandPositionForStore(maze);
 		r = res[0], c = res[1];

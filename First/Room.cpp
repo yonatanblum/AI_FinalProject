@@ -26,6 +26,8 @@ void Room::FillRoom(int maze[MSZ][MSZ], int value)
 bool Room::isValidCellForNewPlayer(int maze[MSZ][MSZ],int r,int c)
 {
 	if (maze[r][c] == WALL) return false;
+	if (maze[r][c] == AMMO_STORE) return false;
+	if (maze[r][c] == MEDICINE_STORE) return false;
 	if (maze[r][c] == PLAYER1) return false;
 	if (maze[r][c] == PLAYER2) return false;
 	return true;
