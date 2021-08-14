@@ -17,6 +17,7 @@ private:
 	int row, col;
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
+	int numOfBullets, numOfGranades;
 	int mode; // mode can be survival=1 or attack=0 
 
 
@@ -25,6 +26,7 @@ public :
 	Player();
 
 	int searchEnemy(Player* allPlayers , int maxPlayers);
+	int searchToHelp(Player* allPlayers, int maxPlayers);
 	//void checkHealth();
 	void escape();
 	void ammoRefill();
@@ -43,6 +45,7 @@ public :
 	int getId() { return id; };
 	int getTeamNum() { return teamNum; };
 	int getHealthPoints() { return healthPoints; };
-
+	int getNumOfBullets() { return numOfBullets; };
+	int getNumOfGranades() { return numOfGranades; };
 };
 

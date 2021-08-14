@@ -10,6 +10,7 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	this->teamNum = teamNum;
 	this->row = x;
 	this->col = y;
+	this->numOfBullets = NUM_BULLETS, this->numOfGranades= MAX_GRANADES;
 
 	for (int i= 0; i < MAX_GRANADES ;i++)
 	{
@@ -53,6 +54,7 @@ void Player::setPlayer(int id, int  type, int teamNum)
 	this->teamNum = teamNum;
 }
 
+
 int Player::searchEnemy(Player * allPlayers, int maxPlayers)
 {
 	int nearest = this->id;
@@ -72,4 +74,26 @@ int Player::searchEnemy(Player * allPlayers, int maxPlayers)
 	}
 	if (nearest == this->id) return -1;
 	return nearest;
+}
+
+int Player::searchToHelp(Player* allPlayers, int maxPlayers)
+{
+	int bestScore = this->id;
+	int minScore = 200;
+	int score = 9999;
+	for (int i = 0; i < maxPlayers; i++)
+	{
+		if (i != this->id && allPlayers[i].getTeamNum() == this->teamNum && allPlayers[i].getHealthPoints() != 0 )
+		{
+			score = allPlayers[i].getHealthPoints() + allPlayers[i].getNumOfBullets() + allPlayers[i].getNumOfGranades();
+			if (score < minScore)
+			{
+				minScore = score;
+				bestScore = i;
+			}
+
+		}
+	}
+	if (bestScore == this->id) return -1;
+	return bestScore;
 }

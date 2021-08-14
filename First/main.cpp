@@ -47,6 +47,8 @@ void InitPlayers();
 void AddPlayerToMaze(int id, int teamNum, int roomIndex);
 int getTeamNum(int ix);
 void CheckNeighborTarget(Cell* pcurrent, int row, int col, int targetTeam, int teamNum, int ix);
+void CheckNeighborByTargetId(Cell* pcurrent, int row, int col, int id, int idTarget);
+void AStarIterationByIdTarget(int runIndex, int idTarget);
 
 
 
@@ -136,7 +138,7 @@ void ClearMaze(int id, int teamNum)
 		}
 
 	for (i = 0; i < NUM_TEAM_PLAYERS*2; i++) {
-		maze[allPlayers[id].getRow()][allPlayers[id].getCol()] = teamNum;
+		maze[allPlayers[i].getRow()][allPlayers[i].getCol()] = allPlayers[i].getTeamNum();
 	}
 	// mark out the start and the target cells
 
@@ -235,6 +237,7 @@ void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int 
 		{
 			if (maze[pcurrent->GetRow()][pcurrent->GetColumn()] == teamNum) // 1 step before pacman
 			{
+
 				runGame = false;
 			}
 
@@ -244,19 +247,91 @@ void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int 
 
 			runPlayer = false;
 			
-		/*	if (runIndex < NUM_OF_GHOSTS)
-				runIndex++;
-			else runIndex = 0;*/
+		}
 
+		else  // it is white neighbor, so make it gray
+		{
+			
+			int tId;
+			tId = allPlayers[id].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
+			int g = pcurrent->GetG() + 1;
+			double h = sqrt(pow(allPlayers[tId].getRow() - row, 2) + pow(allPlayers[tId].getCol() - col, 2));
+			Cell* pc = new Cell(row, col, pcurrent, h, g);
+			grayss[id].push_back(pc);
+			maze[row][col] = GRAY;
+		}
+	}
+}
+
+void AStarIterationByIdTarget(int runIndex,int idTarget)
+{
+
+	Cell* pcurrent;
+
+	if (grayss[runIndex].empty())
+	{
+		cout << "There is no solution\n";
+	}
+	else // there are gray cells
+	{
+		int index = 0;
+		pcurrent = grayss[runIndex].front();  // save the FIRST element,
+		for (int i = 1; i < grayss[runIndex].size(); i++) // find best route (find min F from array) 
+		{
+			double f1 = pcurrent->GetH();
+			double f2 = grayss[runIndex][i]->GetH();
+			if (f1 > f2)
+			{
+				pcurrent = grayss[runIndex][i];
+				index = i;
+			}
+		}
+		grayss[runIndex].erase(grayss[runIndex].begin() + index); // remove it from the queue
+		if (maze[pcurrent->GetRow()][pcurrent->GetColumn()] != allPlayers[runIndex].getTeamNum())
+			maze[pcurrent->GetRow()][pcurrent->GetColumn()] = BLACK;   // and paint it black
+
+		// now check the neighbors
+		// up
+		CheckNeighborByTargetId(pcurrent, pcurrent->GetRow() + 1, pcurrent->GetColumn(), runIndex , idTarget);
+		// down
+		if (runPlayer)
+			CheckNeighborByTargetId(pcurrent, pcurrent->GetRow() - 1, pcurrent->GetColumn(), runIndex, idTarget);
+		// right
+		if (runPlayer)
+			CheckNeighborByTargetId(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() + 1, runIndex, idTarget);
+		// left
+		if (runPlayer)
+			CheckNeighborByTargetId(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() - 1, runIndex, idTarget);
+	}
+
+}
+
+void CheckNeighborByTargetId(Cell* pcurrent, int row, int col, int id,int idTarget)
+{
+	// check the color of the neighbor cell
+
+	if (maze[row][col] == SPACE || (row == allPlayers[idTarget].getRow() && col == allPlayers[idTarget].getCol()))
+	{
+		if (row == allPlayers[idTarget].getRow() && col == allPlayers[idTarget].getCol()) // the solution has been found
+		{
+			if (pcurrent->GetRow() == allPlayers[idTarget].getRow() && pcurrent->GetColumn() == allPlayers[idTarget].getCol()) // 1 step before pacman
+			{
+
+				runGame = false;
+			}
+
+			//cout << "the solution has been found\n";
+			MoveToCell(pcurrent, id, allPlayers[id].getTeamNum());
+			ClearMaze(id, allPlayers[id].getTeamNum());
+
+			runPlayer = false;
 
 		}
 
 		else  // it is white neighbor, so make it gray
 		{
-			//int tId = 6;
-			int tId = allPlayers[id].searchEnemy(allPlayers, NUM_TEAM_PLAYERS*2);
 			int g = pcurrent->GetG() + 1;
-			double h = sqrt(pow(allPlayers[tId].getRow() - row, 2) + pow(allPlayers[tId].getCol() - col, 2));
+			double h = sqrt(pow(allPlayers[idTarget].getRow() - row, 2) + pow(allPlayers[idTarget].getCol() - col, 2));
 			Cell* pc = new Cell(row, col, pcurrent, h, g);
 			grayss[id].push_back(pc);
 			maze[row][col] = GRAY;
@@ -270,12 +345,26 @@ void DoAction(int runIndex)
 	int teamNum = getTeamNum(runIndex);
 	int targetTeam= getTeamTarget(runIndex);
 	
+	runPlayer = true;
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
-		runPlayer = true;
+		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
 		while (runPlayer)
 		{
-		AStarIteration(runIndex,teamNum,targetTeam);
+		//AStarIteration(runIndex,teamNum,targetTeam);
+		AStarIterationByIdTarget(runIndex, enemyID);
+		}
+	}
+	else
+	{
+		int isNeedCharge;
+		int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
+		if (helpId != -1)
+		{
+			while (runPlayer)
+			{
+				AStarIterationByIdTarget(runIndex,helpId);
+			}
 		}
 	}
 }
