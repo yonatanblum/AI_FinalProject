@@ -287,10 +287,12 @@ void DoAction(int runIndex)
 				if (allPlayers[runIndex].getNumOfMedicine()==0 && mStorageId!=-1) //search for medicine 
 				{
 					AStarIterationByPoint(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
+					if (!runPlayer) allPlayers[runIndex].getAmmpFromStorage(medicineStore, mStorageId);
 				}
 				else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
 				{
 					AStarIterationByPoint(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
+					if (!runPlayer) allPlayers[runIndex].getAmmpFromStorage(ammoStore, aStorageId);
 				}
 				else AStarIterationByPoint(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
 			}

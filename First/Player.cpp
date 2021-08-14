@@ -117,3 +117,10 @@ int Player::searchStorage(Storage* allStorage, int maxStorage)
 	}
 	return nearest;
 }
+
+void Player::getAmmpFromStorage(Storage* allStorage, int id)
+{
+	if (this->numOfBullets == 0) this->numOfBullets = allStorage[id].getCharge(NUM_PLAYER_BULLETS);
+	if (this->numOfGranades == 0) this->numOfGranades = allStorage[id].getCharge(MAX_GRANADES);
+
+}

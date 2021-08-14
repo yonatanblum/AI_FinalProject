@@ -29,6 +29,9 @@ public :
 	int searchEnemy(Player* allPlayers , int maxPlayers);
 	int searchToHelp(Player* allPlayers, int maxPlayers);
 	int searchStorage(Storage* allStorage, int maxStorage);
+
+	void getAmmpFromStorage(Storage* allStorage, int id);
+	void getMedFromStorage(Storage* allStorage, int id);
 	//void checkHealth();
 	void escape();
 	void ammoRefill();

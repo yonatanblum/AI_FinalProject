@@ -51,6 +51,22 @@ void Storage::drawStorage(storageType st, int i, int j,int maze[MSZ][MSZ])
 
 }
 
+int Storage::getCharge(int chargeNum)
+{
+
+	if (this->count < chargeNum)
+	{
+		int tmp = this->count;
+		this->count = 0;
+		return tmp;
+	}
+	else
+	{
+		this->count = this->count - chargeNum;
+		return chargeNum;
+	}
+}
+
 
 
 

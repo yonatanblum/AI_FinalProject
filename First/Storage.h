@@ -30,5 +30,7 @@ public:
 	bool isEmpty();
 	void fillPlayer(int amount);
 	void drawStorage(storageType st, int i, int j, int maze[MSZ][MSZ]);
+
+	int getCharge(int chargeNum) ;
 };
 
