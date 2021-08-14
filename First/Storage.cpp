@@ -12,11 +12,12 @@ Storage::~Storage()
 
 }
 
-Storage::Storage(storageType type, int row, int col)
+Storage::Storage(storageType type, int row, int col,int id)
 {
 	storeType = type;
 	centerRow = row;
 	centerCol = col;
+	this->id = id;
 	if (type == Ammo)
 		count = MAXIMUM_GRANADES + MAX_BULLETS;
 	else

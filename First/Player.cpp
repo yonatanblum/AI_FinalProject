@@ -10,7 +10,7 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	this->teamNum = teamNum;
 	this->row = x;
 	this->col = y;
-	this->numOfBullets = NUM_BULLETS, this->numOfGranades= MAX_GRANADES;
+	this->numOfBullets = NUM_BULLETS, this->numOfGranades= MAX_GRANADES, this->numOfMedicine= MAX_HEALTH;
 
 	for (int i= 0; i < MAX_GRANADES ;i++)
 	{
@@ -96,4 +96,24 @@ int Player::searchToHelp(Player* allPlayers, int maxPlayers)
 	}
 	if (bestScore == this->id) return -1;
 	return bestScore;
+}
+
+int Player::searchStorage(Storage* allStorage, int maxStorage)
+{
+	int nearest = -1;
+	int minDist = 99999;
+	int dist;
+	for (int i = 0; i < maxStorage; i++)
+	{
+		if (!allStorage[i].isEmpty())
+		{
+			dist = sqrt(pow(allStorage[i].GetCenterRow() - this->row, 2) + pow(allStorage[i].GetCenterCol() - this->col, 2));
+			if (dist < minDist)
+			{
+				minDist = dist;
+				nearest = i;
+			}
+		}
+	}
+	return nearest;
 }

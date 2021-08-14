@@ -1,6 +1,7 @@
 #pragma once
 #include "Granade.h"
 #include "Bullet.h"
+#include "Storage.h"
 
 const int MAX_HEALTH = 100;
 const int MAX_GRANADES = 3;
@@ -17,7 +18,7 @@ private:
 	int row, col;
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
-	int numOfBullets, numOfGranades;
+	int numOfBullets, numOfGranades , numOfMedicine;
 	int mode; // mode can be survival=1 or attack=0 
 
 
@@ -27,6 +28,7 @@ public :
 
 	int searchEnemy(Player* allPlayers , int maxPlayers);
 	int searchToHelp(Player* allPlayers, int maxPlayers);
+	int searchStorage(Storage* allStorage, int maxStorage);
 	//void checkHealth();
 	void escape();
 	void ammoRefill();
@@ -47,5 +49,6 @@ public :
 	int getHealthPoints() { return healthPoints; };
 	int getNumOfBullets() { return numOfBullets; };
 	int getNumOfGranades() { return numOfGranades; };
+	int getNumOfMedicine() { return numOfMedicine; };
 };
 

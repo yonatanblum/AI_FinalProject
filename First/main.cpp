@@ -28,8 +28,8 @@ bool runGame = false, runPlayer;
 
 vector <Cell*> grayss[NUM_TEAM_PLAYERS*2];
 Room rooms[NUM_ROOMS];
-Storage ammoStore[NUM_ROOMS][STORE_IN_ROOM];			// 12x2				
-Storage medicineStore[NUM_ROOMS][STORE_IN_ROOM];		// 12x2			
+Storage ammoStore[NUM_ROOMS*STORE_IN_ROOM];			// 12x1				
+Storage medicineStore[NUM_ROOMS*STORE_IN_ROOM];		// 12x1			
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
 Player allPlayers[NUM_TEAM_PLAYERS*2];
@@ -46,9 +46,8 @@ void addAllStoragesToRoom(int roomNum);
 void InitPlayers();
 void AddPlayerToMaze(int id, int teamNum, int roomIndex);
 int getTeamNum(int ix);
-void CheckNeighborTarget(Cell* pcurrent, int row, int col, int targetTeam, int teamNum, int ix);
-void CheckNeighborByTargetId(Cell* pcurrent, int row, int col, int id, int idTarget);
-void AStarIterationByIdTarget(int runIndex, int idTarget);
+void CheckNeighborByPoint(Cell* pcurrent, int row, int col, int id, int rowT, int colT);
+void AStarIterationByPoint(int runIndex, int rowT, int colT);
 
 
 
@@ -184,86 +183,7 @@ int getTeamTarget(int ix)
 	return PLAYER2;
 }
 
-
-void AStarIteration(int runIndex, int teamNum, int targetTeam)
-{
-	
-	Cell* pcurrent;
-
-	if (grayss[runIndex].empty())
-	{
-		cout << "There is no solution\n";
-	}
-	else // there are gray cells
-	{
-		int index = 0;
-		pcurrent = grayss[runIndex].front();  // save the FIRST element,
-		for (int i = 1; i < grayss[runIndex].size(); i++) // find best route (find min F from array) 
-		{
-			double f1 = pcurrent->GetH();
-			double f2 = grayss[runIndex][i]->GetH();
-			if (f1 > f2)
-			{
-				pcurrent = grayss[runIndex][i];
-				index = i;
-			}
-		}
-		grayss[runIndex].erase(grayss[runIndex].begin() + index); // remove it from the queue
-		if (maze[pcurrent->GetRow()][pcurrent->GetColumn()] != teamNum)
-			maze[pcurrent->GetRow()][pcurrent->GetColumn()] = BLACK;   // and paint it black
-
-		// now check the neighbors
-		// up
-		CheckNeighborTarget(pcurrent, pcurrent->GetRow() + 1, pcurrent->GetColumn(), targetTeam, teamNum, runIndex);
-		// down
-		if (runPlayer)
-			CheckNeighborTarget(pcurrent, pcurrent->GetRow() - 1, pcurrent->GetColumn(), targetTeam, teamNum, runIndex);
-		// right
-		if (runPlayer)
-			CheckNeighborTarget(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() + 1, targetTeam, teamNum, runIndex);
-		// left
-		if (runPlayer)
-			CheckNeighborTarget(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() - 1, targetTeam, teamNum, runIndex);
-	}
-
-}
-void CheckNeighborTarget(Cell* pcurrent, int row, int col , int targetTeam ,int teamNum,int id)
-{
-	// check the color of the neighbor cell
-
-	if (maze[row][col] == SPACE || maze[row][col] == targetTeam /* || (row != allPlayers[ix].getRow() && col != allPlayers[ix].getCol() && maze[row][col] == teamNum)*/)
-	{
-		if (maze[row][col] == targetTeam ) // the solution has been found
-		{
-			if (maze[pcurrent->GetRow()][pcurrent->GetColumn()] == teamNum) // 1 step before pacman
-			{
-
-				runGame = false;
-			}
-
-			//cout << "the solution has been found\n";
-			MoveToCell(pcurrent,id, teamNum);
-			ClearMaze(id,teamNum);
-
-			runPlayer = false;
-			
-		}
-
-		else  // it is white neighbor, so make it gray
-		{
-			
-			int tId;
-			tId = allPlayers[id].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
-			int g = pcurrent->GetG() + 1;
-			double h = sqrt(pow(allPlayers[tId].getRow() - row, 2) + pow(allPlayers[tId].getCol() - col, 2));
-			Cell* pc = new Cell(row, col, pcurrent, h, g);
-			grayss[id].push_back(pc);
-			maze[row][col] = GRAY;
-		}
-	}
-}
-
-void AStarIterationByIdTarget(int runIndex,int idTarget)
+void AStarIterationByPoint(int runIndex,int rowT, int colT)
 {
 
 	Cell* pcurrent;
@@ -292,29 +212,29 @@ void AStarIterationByIdTarget(int runIndex,int idTarget)
 
 		// now check the neighbors
 		// up
-		CheckNeighborByTargetId(pcurrent, pcurrent->GetRow() + 1, pcurrent->GetColumn(), runIndex , idTarget);
+		CheckNeighborByPoint(pcurrent, pcurrent->GetRow() + 1, pcurrent->GetColumn(), runIndex , rowT ,colT);
 		// down
 		if (runPlayer)
-			CheckNeighborByTargetId(pcurrent, pcurrent->GetRow() - 1, pcurrent->GetColumn(), runIndex, idTarget);
+			CheckNeighborByPoint(pcurrent, pcurrent->GetRow() - 1, pcurrent->GetColumn(), runIndex, rowT, colT);
 		// right
 		if (runPlayer)
-			CheckNeighborByTargetId(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() + 1, runIndex, idTarget);
+			CheckNeighborByPoint(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() + 1, runIndex, rowT, colT);
 		// left
 		if (runPlayer)
-			CheckNeighborByTargetId(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() - 1, runIndex, idTarget);
+			CheckNeighborByPoint(pcurrent, pcurrent->GetRow(), pcurrent->GetColumn() - 1, runIndex, rowT, colT);
 	}
 
 }
 
-void CheckNeighborByTargetId(Cell* pcurrent, int row, int col, int id,int idTarget)
+void CheckNeighborByPoint(Cell* pcurrent, int row, int col, int id,int rowT, int colT)
 {
 	// check the color of the neighbor cell
 
-	if (maze[row][col] == SPACE || (row == allPlayers[idTarget].getRow() && col == allPlayers[idTarget].getCol()))
+	if (maze[row][col] == SPACE || (row == rowT && col == colT))
 	{
-		if (row == allPlayers[idTarget].getRow() && col == allPlayers[idTarget].getCol()) // the solution has been found
+		if (row == rowT && col == colT) // the solution has been found
 		{
-			if (pcurrent->GetRow() == allPlayers[idTarget].getRow() && pcurrent->GetColumn() == allPlayers[idTarget].getCol()) // 1 step before pacman
+			if (pcurrent->GetRow() == rowT && pcurrent->GetColumn() == colT) // 1 step before pacman
 			{
 
 				runGame = false;
@@ -331,7 +251,7 @@ void CheckNeighborByTargetId(Cell* pcurrent, int row, int col, int id,int idTarg
 		else  // it is white neighbor, so make it gray
 		{
 			int g = pcurrent->GetG() + 1;
-			double h = sqrt(pow(allPlayers[idTarget].getRow() - row, 2) + pow(allPlayers[idTarget].getCol() - col, 2));
+			double h = sqrt(pow(rowT - row, 2) + pow(colT - col, 2));
 			Cell* pc = new Cell(row, col, pcurrent, h, g);
 			grayss[id].push_back(pc);
 			maze[row][col] = GRAY;
@@ -351,23 +271,34 @@ void DoAction(int runIndex)
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
 		while (runPlayer)
 		{
-		//AStarIteration(runIndex,teamNum,targetTeam);
-		AStarIterationByIdTarget(runIndex, enemyID);
+		AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
 		}
 	}
 	else
 	{
-		int isNeedCharge;
+
 		int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
 		if (helpId != -1)
 		{
 			while (runPlayer)
 			{
-				AStarIterationByIdTarget(runIndex,helpId);
+				int mStorageId = allPlayers[runIndex].searchStorage(medicineStore, NUM_ROOMS * STORE_IN_ROOM);
+				int aStorageId = allPlayers[runIndex].searchStorage(ammoStore, NUM_ROOMS * STORE_IN_ROOM);
+				if (allPlayers[runIndex].getNumOfMedicine()==0 && mStorageId!=-1) //search for medicine 
+				{
+					AStarIterationByPoint(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
+				}
+				else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
+				{
+					AStarIterationByPoint(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
+				}
+				else AStarIterationByPoint(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
 			}
 		}
 	}
 }
+
+
 
 void RunGame()
 {
@@ -428,19 +359,22 @@ void addAllStoragesToRoom(int roomNum)																///
 {
 	int* res;
 	int r, c;
+	int id;
 	for (int storeNum = 0; storeNum < STORE_IN_ROOM; storeNum++)
 	{
+		id = roomNum * STORE_IN_ROOM + storeNum;
 		res = rooms[roomNum].getRandPositionForStore(maze);
 		r = res[0], c = res[1];
-		ammoStore[roomNum][storeNum] = Storage(Ammo, r, c);
-		ammoStore[roomNum][storeNum].drawStorage(Ammo, r, c, maze);
+		ammoStore[id] = Storage(Ammo, r, c, id);
+		ammoStore[id].drawStorage(Ammo, r, c, maze);
 	}
 	for (int storeNum = 0; storeNum < STORE_IN_ROOM; storeNum++)
 	{
+		id = roomNum * STORE_IN_ROOM + storeNum;
 		res = rooms[roomNum].getRandPositionForStore(maze);
 		r = res[0], c = res[1];
-		medicineStore[roomNum][storeNum] = Storage(Medicines, r, c);
-		medicineStore[roomNum][storeNum].drawStorage(Medicines, r, c, maze);
+		medicineStore[id] = Storage(Medicines, r, c, id);
+		medicineStore[id].drawStorage(Medicines, r, c, maze);
 	}
 }
 

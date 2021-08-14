@@ -16,10 +16,11 @@ private:
 	int centerRow, centerCol;			// center of storage facility
 	storageType storeType;
 	int count;
+	int id;
 public:
 	Storage();
 	~Storage();
-	Storage(storageType type, int row, int col);
+	Storage(storageType type, int row, int col,int id);
 	int GetCenterRow() { return centerRow; }
 	int GetCenterCol() { return centerCol; }
 	int getCount() { return count; }
