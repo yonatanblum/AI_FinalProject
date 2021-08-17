@@ -15,11 +15,10 @@
 //NIR Branch
 using namespace std;
 
-
-
 const int NUM_ROOMS = 12;
 const int NUM_TEAM_PLAYERS = 5; 
-const int STORE_IN_ROOM = 1;									
+const int STORE_IN_ROOM = 1;
+int numOfPlayers = 10;
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -259,8 +258,54 @@ void CheckNeighborByPoint(Cell* pcurrent, int row, int col, int id,int rowT, int
 	}
 }
 
+bool playersInSameRoom(Player p1, Player p2)
+{
+	for (int i = 0; i < NUM_ROOMS; i++)
+	{
+		if ((p1.getRow() > rooms[i].GetCenterRow() - rooms[i].GetHeight() / 2) && (p1.getRow() < rooms[i].GetCenterRow()+rooms[i].GetHeight()/2)
+			&&(p1.getCol() > rooms[i].GetCenterCol() - rooms[i].GetWidth() / 2) &&(p1.getCol() < rooms[i].GetCenterCol()+rooms[i].GetWidth()/2))
+			if ((p2.getRow() > rooms[i].GetCenterRow() - rooms[i].GetHeight() / 2) && (p2.getRow() < rooms[i].GetCenterRow() + rooms[i].GetHeight() / 2)
+				&&(p2.getCol() > rooms[i].GetCenterCol() - rooms[i].GetWidth() / 2) && (p2.getCol() < rooms[i].GetCenterCol() + rooms[i].GetWidth() / 2))
+			{
+				return true;
+			}
+	}
+	return false;
+}
 
-void DoAction(int runIndex)
+double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int centerCol2)								/////
+{
+	double angle;
+	int lengthX = centerCol2 - centerCol1;
+	int lengthY = centerRow2 - centerRow1;
+	angle = atan(lengthY / lengthX);
+	return angle;
+}
+
+bool haveEyeContact(Player attacker, Player attacked)																		/////
+{
+	double angle = calcAngleBetweenCells(attacker.getRow(), attacker.getCol(), attacked.getRow(), attacked.getCol());
+	double x = 0; double y = 0;
+	int row = attacker.getRow(), col = attacker.getCol();
+	while (row!= attacked.getRow() && col != attacked.getCol())
+	{
+		x = x + cos(angle);
+		y = y + sin(angle);
+		col = (int)(MSZ * (x + 1) / 2);
+		row = (int)(MSZ * (y + 1) / 2);
+		if (maze[row][col] == WALL || maze[row][col] == AMMO_STORE || maze[row][col] == MEDICINE_STORE)  // toDO - add same team player
+			return false;
+	}
+	return true;
+}
+
+bool canAttack(Player attacker, Player attacked)
+{
+	return (playersInSameRoom(attacker, attacked) && haveEyeContact(attacker, attacked) && (attacker.getHealthPoints())>HEALTH_MIN_LINE);
+}
+
+
+void DoAction(int runIndex)	/////
 {
 	int teamNum = getTeamNum(runIndex);
 	int targetTeam= getTeamTarget(runIndex);
@@ -272,6 +317,20 @@ void DoAction(int runIndex)
 		while (runPlayer)
 		{
 		AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+		}
+		double angle = calcAngleBetweenCells(allPlayers[runIndex].getRow(), allPlayers[runIndex].getCol(), allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+		if (canAttack(allPlayers[runIndex], allPlayers[enemyID]))
+		{
+			allPlayers[runIndex].attack(allPlayers, enemyID, angle);
+			if (allPlayers[enemyID].getHealthPoints() == 0)									// if the attacked player is dead
+			{
+				maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image
+				for (int i = enemyID; i < (2*NUM_TEAM_PLAYERS - 1); i++)						// delete from array
+				{
+					allPlayers[i] = allPlayers[i + 1];
+				}
+				numOfPlayers--;
+			}
 		}
 	}
 	else
