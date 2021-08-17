@@ -122,5 +122,79 @@ void Player::getAmmpFromStorage(Storage* allStorage, int id)
 {
 	if (this->numOfBullets == 0) this->numOfBullets = allStorage[id].getCharge(NUM_PLAYER_BULLETS);
 	if (this->numOfGranades == 0) this->numOfGranades = allStorage[id].getCharge(MAX_GRANADES);
+}
 
+double Player::distaneToEnemy(Player* allPlayers,int enemyNum)		/////
+{
+	double dist = sqrt(pow(allPlayers[enemyNum].getRow() - this->row, 2) + pow(allPlayers[enemyNum].getCol() - this->col, 2));
+	return dist;
+}
+
+void Player::attack(Player* allPlayers, int index,double angle)		/////
+{
+	int kindOfShot;
+	bool hit;
+	double dist = distaneToEnemy(allPlayers, index);
+	double currX, currY;
+	currX = (2 * col / MSZ) - 1;
+	currY = (2 * row / MSZ) - 1;
+	if (dist > MAX_RANGE_GRANADE)
+	{
+		if (numOfBullets != 0)
+		{
+			Bullet* current = bullets[numOfBullets - 1];
+			current->setX(currX);
+			current->setY(currY);
+			current->setAngle(angle);
+			current->Fire();
+			kindOfShot = 1;
+			hit = isAHit(kindOfShot, allPlayers[index]);
+			bullets[numOfBullets - 1] = NULL;
+			numOfBullets--;
+		}
+	}
+	else
+	{
+		if (numOfGranades != 0)
+		{
+			Granade* current = granades[numOfGranades - 1];
+			current->setX(currX);
+			current->setY(currY);
+			current->Explode();
+			kindOfShot = 2;
+			hit = isAHit(kindOfShot, allPlayers[index]);
+			granades[numOfGranades - 1] = NULL;
+			numOfGranades--;
+		}
+	}
+	if (hit==true)
+		allPlayers[index].isHurt(kindOfShot, dist);
+}
+
+bool Player::isAHit(int kindOfShot,Player player)	/////
+{
+	bool hit = false;
+	if (kindOfShot == 1)
+	{
+		if (bullets[numOfBullets-1]->getX() == player.getRow() && bullets[numOfBullets - 1]->getY() == player.getCol())
+			hit = true;
+	}
+	else
+	{
+		if (granades[numOfBullets - 1]->getX() == player.getRow() && granades[numOfBullets - 1]->getY() == player.getCol())
+			hit = true;
+	}
+	return hit;
+}
+
+void Player::isHurt(int kind,int dist)		/////													
+{
+	int injuryLevel;
+	if (kind == 1)			// hit by bullet (long range)
+		injuryLevel = (int)((-1)*(dist - MAX_RANGE_BULLET + 1) / 10);			// differential formula based on distance from the shot.
+	else                     // hit by granade
+		injuryLevel = (int)((-1)*(dist - MAX_RANGE_GRANADE + 1) / 10);
+	healthPoints = healthPoints - injuryLevel;
+	if (healthPoints <= 0)
+		healthPoints = 0;
 }
