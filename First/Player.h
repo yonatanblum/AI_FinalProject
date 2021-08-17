@@ -53,5 +53,9 @@ public :
 	int getNumOfBullets() { return numOfBullets; };
 	int getNumOfGranades() { return numOfGranades; };
 	int getNumOfMedicine() { return numOfMedicine; };
+	double distaneToEnemy(Player* allPlayers, int enemy);	/////
+	void attack(Player* allPlayers, int index,double angle);	/////
+	bool isAHit(int kindOfShot,Player player);	/////												
+	void isHurt(int kindOfShot,int distOfShot);	/////
 };
 
