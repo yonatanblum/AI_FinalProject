@@ -259,9 +259,56 @@ void CheckNeighborByPoint(Cell* pcurrent, int row, int col, int id,int rowT, int
 	}
 }
 
+double distanceOfPlayers(Player p1,Player p2)	// distance between attacker and enemy								/////
+{
+	double dist = sqrt(pow(p1.getRow() - p2.getRow(), 2) + pow(p1.getCol() - p2.getCol(), 2));
+	return dist;
+}
+
+double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int centerCol2)	// angle between attacker and enemy		/////
+{
+	double angle;
+	int lengthX = centerCol2 - centerCol1;
+	int lengthY = centerRow2 - centerRow1;
+	if (lengthX == 0 && lengthY == 0)
+		angle = 0;
+	else if (lengthX == 0 || lengthY==0)
+		angle = 3.14 / 2;
+	else
+		angle = atan(lengthY / lengthX);
+	return angle;
+}
+
+bool haveEyeContact(Player attacker, Player attacked,double angle)	// is the path between attacker and enemy without obstacles																	/////
+{
+	double x = 0; double y = 0;
+	int row = attacker.getRow(), col = attacker.getCol();
+	while (row!= attacked.getRow() && col!= attacked.getCol())
+	{
+		x = x + 0.001*cos(angle);
+		y = y + 0.001*sin(angle);
+		col = (int)(MSZ * (x + 1) / 2);
+		row = (int)(MSZ * (y + 1) / 2);
+		if (maze[row][col] == WALL || maze[row][col] == AMMO_STORE || maze[row][col] == MEDICINE_STORE )  
+			return false;
+	}
+	return true;
+}
+
+bool canAttack(Player attacker, Player enemy,double angle)	// is the path btween attacker and enemy clear and the right distance
+{
+	double dist = distanceOfPlayers(attacker, enemy);
+	if (dist <= MAX_RANGE_ATTACK && dist >= MIN_RANGE_ATTACK)
+	{
+		if (haveEyeContact(attacker, enemy, angle))
+			return true;
+	}
+	return false;
+}
 
 void DoAction(int runIndex)
 {
+	double angle;
 	int teamNum = getTeamNum(runIndex);
 	int targetTeam= getTeamTarget(runIndex);
 	
@@ -269,9 +316,17 @@ void DoAction(int runIndex)
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
-		while (runPlayer)
+		angle = calcAngleBetweenCells(allPlayers[runIndex].getRow(), allPlayers[runIndex].getCol(), allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+		if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle))
 		{
-		AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+			cout << "------ shut enemy!!!! ----------\n";			// only to know if the attack happened!!!
+		}
+		else
+		{
+			while (runPlayer)
+			{
+			AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+			}
 		}
 	}
 	else
