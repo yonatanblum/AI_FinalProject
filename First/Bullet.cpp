@@ -39,7 +39,8 @@ void Bullet::Move(int maze[MSZ][MSZ])
 		// check if the bullet is still above SPACE
 		column = (int)(MSZ * (x + 1) / 2);
 		row = (int)(MSZ * (y + 1) / 2);
-		if (maze[row][column] == WALL)
+		if (maze[row][column] == WALL || maze[row][column] == PLAYER1 || maze[row][column] == PLAYER2|| maze[row][column] == AMMO_STORE 
+				|| maze[row][column] == MEDICINE_STORE)
 			isFired = false;
 	}
 }
