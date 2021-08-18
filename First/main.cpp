@@ -1,5 +1,5 @@
 #include "glut.h"//
-#include <time.h>
+#include <time.h>//
 #include "Cell.h"
 #include <vector>
 #include <iostream>
