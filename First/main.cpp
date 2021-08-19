@@ -19,7 +19,7 @@ using namespace std;
 
 const int NUM_ROOMS = 12;
 const int NUM_TEAM_PLAYERS = 5; 
-const int STORE_IN_ROOM = 1;									
+const int STORE_IN_ROOM = 1;
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -29,10 +29,11 @@ bool runGame = false, runPlayer;
 vector <Cell*> grayss[NUM_TEAM_PLAYERS*2];
 Room rooms[NUM_ROOMS];
 Storage ammoStore[NUM_ROOMS*STORE_IN_ROOM];			// 12x1				
-Storage medicineStore[NUM_ROOMS*STORE_IN_ROOM];		// 12x1			
+Storage medicineStore[NUM_ROOMS*STORE_IN_ROOM];			// 12x1			
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
 Player allPlayers[NUM_TEAM_PLAYERS*2];
+int numOfPlayers = 10;
 
 
 void InitMaze();
@@ -279,36 +280,57 @@ double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int
 	return angle;
 }
 
-bool haveEyeContact(Player attacker, Player attacked,double angle)	// is the path between attacker and enemy without obstacles																	/////
+bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
 {
-	double x = 0; double y = 0;
+	double lengthX = enemy.getCol() - attacker.getCol();
+	double lengthY = enemy.getRow() - attacker.getRow();
+	double stepX = lengthX / dist;
+	double stepY = lengthY / dist;
+	double x = attacker.getX(); double y = attacker.getY();
 	int row = attacker.getRow(), col = attacker.getCol();
-	while (row!= attacked.getRow() && col!= attacked.getCol())
+	printf("attacker row = %d , attacker col = %d\n", attacker.getRow(), col = attacker.getCol());
+	printf("enemy row = %d , enemy col = %d\n", enemy.getRow(), col = enemy.getCol());
+	printf("stepX = %lf , stepY = %lf\n", stepX, stepY);
+	printf("distance = %lf\n", dist);
+	while (row!= enemy.getRow() && col!= enemy.getCol())
 	{
-		x = x + 0.001*cos(angle);
-		y = y + 0.001*sin(angle);
+		printf("row = %d , col = %d", row, col);
+		x = x + stepX;
+		y = y + stepY;
 		col = (int)(MSZ * (x + 1) / 2);
 		row = (int)(MSZ * (y + 1) / 2);
-		if (maze[row][col] == WALL || maze[row][col] == AMMO_STORE || maze[row][col] == MEDICINE_STORE )  
+		printf("row = %d , col = %d\n", row, col);
+		if (maze[row][col] == WALL || maze[row][col] == AMMO_STORE || maze[row][col] == MEDICINE_STORE )  // toDO - add same team player
 			return false;
 	}
 	return true;
 }
 
-bool canAttack(Player attacker, Player enemy,double angle)	// is the path btween attacker and enemy clear and the right distance
+bool canAttack(Player attacker, Player enemy,double angle,double dist)
 {
-	double dist = distanceOfPlayers(attacker, enemy);
 	if (dist <= MAX_RANGE_ATTACK && dist >= MIN_RANGE_ATTACK)
 	{
-		if (haveEyeContact(attacker, enemy, angle))
+		if (haveEyeContact(attacker, enemy, angle,dist))
 			return true;
 	}
 	return false;
 }
 
+bool isAHit()																				/////
+{
+	bool hit = false;
+	if ((rand() % 100) < 30)
+	{
+		hit = true;
+		cout << "-----------------it's a hit!!!!!!----------------------\n";
+	}
+	else
+		cout << "---------------------it's a miss!!!!!----------------------\n";
+	return hit;
+}
+
 void DoAction(int runIndex)
 {
-	double angle;
 	int teamNum = getTeamNum(runIndex);
 	int targetTeam= getTeamTarget(runIndex);
 	
@@ -316,10 +338,22 @@ void DoAction(int runIndex)
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
-		angle = calcAngleBetweenCells(allPlayers[runIndex].getRow(), allPlayers[runIndex].getCol(), allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
-		if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle))
+		double angle = calcAngleBetweenPlayers(allPlayers[runIndex], allPlayers[enemyID]);
+		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
+		if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 		{
-			cout << "------ shut enemy!!!! ----------\n";			// only to know if the attack happened!!!
+			allPlayers[runIndex].attack(maze,security_map,allPlayers, enemyID, angle,dist);
+			if (isAHit())
+				allPlayers[enemyID].isHurt(dist);		// enemy is injured
+			if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
+			{
+				maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+				for (int i = enemyID; i < numOfPlayers-1; i++)						// delete player from array
+				{
+					allPlayers[i] = allPlayers[i + 1];		// arrenge the array
+				}
+				numOfPlayers--;		// update the number of players
+			}
 		}
 		else
 		{
