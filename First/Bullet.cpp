@@ -15,6 +15,8 @@ Bullet::Bullet(double x, double y, double angle)
 	this->x = x;
 	this->y = y;
 	dir_angle = angle;// in radians
+	bulletCol = (int)(MSZ * (x + 1) / 2);
+	bulletRow = (int)(MSZ * (y + 1) / 2);	
 	isFired = false;
 }
 
@@ -39,8 +41,7 @@ void Bullet::Move(int maze[MSZ][MSZ])
 		// check if the bullet is still above SPACE
 		column = (int)(MSZ * (x + 1) / 2);
 		row = (int)(MSZ * (y + 1) / 2);
-		if (maze[row][column] == WALL || maze[row][column] == PLAYER1 || maze[row][column] == PLAYER2|| maze[row][column] == AMMO_STORE 
-				|| maze[row][column] == MEDICINE_STORE)
+		if (maze[row][column] == WALL ||  maze[row][column] == AMMO_STORE || maze[row][column] == MEDICINE_STORE)
 			isFired = false;
 	}
 }
@@ -69,10 +70,12 @@ void Bullet::SimulateFire(int maze[MSZ][MSZ], double security_map[MSZ][MSZ], dou
 	{
 		column = (int)(MSZ * (x + 1) / 2);
 		row = (int)(MSZ * (y + 1) / 2);
-		if (maze[row][column] == WALL)
+		if (maze[row][column] == WALL || maze[row][column] == AMMO_STORE || maze[row][column] == MEDICINE_STORE )
 			simulate = false;
 		else // maze[row][column] is SPACE
 		{
+			ShowMe();
+			maze[row][column] = BULLET;
 			security_map[row][column] += hurt;
 			x += SPEED * dirx;
 			y += SPEED * diry;
