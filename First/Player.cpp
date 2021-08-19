@@ -12,6 +12,8 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	this->teamNum = teamNum;
 	this->row = x;
 	this->col = y;
+	x = ((2 * col / MSZ) - 1);
+	y = ((2 * row / MSZ) - 1);
 	this->numOfBullets = NUM_BULLETS, this->numOfGranades= MAX_GRANADES, this->numOfMedicine= MAX_HEALTH;
 
 	for (int i= 0; i < MAX_GRANADES ;i++)
