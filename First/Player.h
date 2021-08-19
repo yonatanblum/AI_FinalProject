@@ -16,8 +16,11 @@ private:
 	int healthPoints;
 	int teamNum; 
 	int row, col;
+	double x, y;													//////
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
+	Bullet* bullet;													//////
+	Granade* granade;												//////
 	int numOfBullets, numOfGranades , numOfMedicine;
 	int mode; // mode can be survival=1 or attack=0 
 
@@ -37,7 +40,6 @@ public :
 	void ammoRefill();
 	void improvingHealthPoints();
 
-	void fire();
 	void move();
 	void heal(int points);
 
@@ -47,11 +49,16 @@ public :
 	int getType() { return type; };
 	int getRow() { return row; };
 	int getCol() { return col; };
+	double getX() { return x; };																																//////
+	double getY() { return y; };		
 	int getId() { return id; };
 	int getTeamNum() { return teamNum; };
 	int getHealthPoints() { return healthPoints; };
 	int getNumOfBullets() { return numOfBullets; };
 	int getNumOfGranades() { return numOfGranades; };
 	int getNumOfMedicine() { return numOfMedicine; };
+	
+	void attack(int maze[MSZ][MSZ], double map[MSZ][MSZ],Player* allPlayers, int index,double angle,double dist);		//////
+	void isHurt(int distOfShot);												//////										/////
 };
 
