@@ -1,8 +1,10 @@
 #include "Bullet.h"
 #include "GLUT.H"
 #include <math.h>
+#include <stdlib.h>		
+#include <iostream>
 
-Bullet::Bullet(double x, double y)// 1234
+Bullet::Bullet(double x, double y)
 {
 	this->x = x;
 	this->y = y;
