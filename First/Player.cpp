@@ -3,8 +3,10 @@
 #include <math.h>
 using namespace std;
 
-# define MAX_RANGE_GRANADE 15
-# define MAX_RANGE_BULLET 2*15
+const int MAX_RANGE_GRANADE = 15;
+const int MAX_RANGE_BULLET = 30;
+
+
 
 Player::Player(int x, int y ,int id, int type , int teamNum)
 {
@@ -37,7 +39,10 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 
 Player::Player()
 {
-	this->healthPoints = MAX_HEALTH;
+	healthPoints = MAX_HEALTH;
+	numOfBullets = NUM_BULLETS;
+	numOfGranades = MAX_GRANADES;
+	numOfMedicine = MAX_HEALTH;
 
 	for (int i = 0; i < MAX_GRANADES; i++)
 	{

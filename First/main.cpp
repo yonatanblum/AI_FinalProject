@@ -8,9 +8,10 @@
 #include "CompareCells.h"
 #include "Bullet.h"
 #include "Granade.h"
-#include<windows.h>
+#include <windows.h>
 #include "Player.h"
-#include "Storage.h"											
+#include "Storage.h"			
+#include <math.h>
 
 //NIR Branch
 using namespace std;
@@ -18,7 +19,7 @@ using namespace std;
 
 
 const int NUM_ROOMS = 12;
-const int NUM_TEAM_PLAYERS = 5; 
+const int NUM_TEAM_PLAYERS = 1; 
 const int STORE_IN_ROOM = 1;
 const int MAX_RANGE_ATTACK = 20;
 const int MIN_RANGE_ATTACK = 0;
@@ -103,7 +104,6 @@ void InitPlayers()
 		if (i >= NUM_TEAM_PLAYERS) teamNum = PLAYER2;
 		else teamNum = PLAYER1;
 		AddPlayerToMaze(i, teamNum, roomIndex);
-		
 		allPlayers[i].printPlayer();
 	}
 }
@@ -116,9 +116,10 @@ void AddPlayerToMaze(int id,int teamNum, int roomIndex)
 	maze[r][c] = teamNum;
 	cout << "r : " << r << ", c : " << c << endl;
 	allPlayers[id].setPosition(r, c);
-	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
-		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
-	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
+	//if (NUM_TEAM_PLAYERS > 1 && id == 0) 
+		//allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
+	//else
+	allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
 	Cell* pc = new Cell(r, c, nullptr,9999.0,0);
 	grayss[id].push_back(pc);
 }
@@ -282,26 +283,38 @@ double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int
 
 bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
 {
-	double lengthX = enemy.getCol() - attacker.getCol();
-	double lengthY = enemy.getRow() - attacker.getRow();
+	double lengthY = enemy.getCol() - attacker.getCol();
+	double lengthX = enemy.getRow() - attacker.getRow();
 	double stepX = lengthX / dist;
 	double stepY = lengthY / dist;
-	double x = attacker.getX(); double y = attacker.getY();
+	double x = attacker.getRow(); double y = attacker.getCol();
 	int row = attacker.getRow(), col = attacker.getCol();
 	printf("attacker row = %d , attacker col = %d\n", attacker.getRow(), col = attacker.getCol());
 	printf("enemy row = %d , enemy col = %d\n", enemy.getRow(), col = enemy.getCol());
 	printf("stepX = %lf , stepY = %lf\n", stepX, stepY);
 	printf("distance = %lf\n", dist);
-	while (row!= enemy.getRow() || col!= enemy.getCol())
+	double dirx, diry;
+	double dir_angle = atan2(lengthY,lengthX); // in rads
+	dirx = cos(dir_angle);
+	diry = sin(dir_angle);
+	while (x!= enemy.getRow() || y!= enemy.getCol())
 	{
+
+		int angleInDegree = dir_angle * 180 / 3.14; //angle in degree
 		printf("row = %d , col = %d", row, col);
-		x = x + stepX;
-		y = y + stepY;
+		//x = x + stepX;
+		//y = y + stepY;
+		
 		col = (int)(MSZ * (x + 1) / 2);
 		row = (int)(MSZ * (y + 1) / 2);
 		printf("row = %d , col = %d\n", row, col);
 		if (maze[row][col] == WALL || maze[row][col] == AMMO_STORE || maze[row][col] == MEDICINE_STORE )  // toDO - add same team player
 			return false;
+		else
+		{
+			x += dirx;
+			y += diry;
+		}
 	}
 	return true;
 }
@@ -310,7 +323,7 @@ bool canAttack(Player attacker, Player enemy,double angle,double dist)
 {
 	if (dist <= MAX_RANGE_ATTACK && dist >= MIN_RANGE_ATTACK)
 	{
-		if (haveEyeContact(attacker, enemy, angle,dist))
+		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
 			return true;
 	}
 	return false;

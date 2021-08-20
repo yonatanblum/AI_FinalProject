@@ -15,13 +15,15 @@ private:
 	int type; // type can be attacker=0 or squire =1
 	int healthPoints;
 	int teamNum; 
+	int numOfBullets;
+	int numOfGranades;
+	int numOfMedicine;
 	int row, col;
 	double x, y;													//////
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
 	Bullet* bullet;													//////
 	Granade* granade;												//////
-	int numOfBullets, numOfGranades , numOfMedicine;
 	int mode; // mode can be survival=1 or attack=0 
 
 
