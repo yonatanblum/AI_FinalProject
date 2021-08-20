@@ -1,5 +1,6 @@
 #include "Player.h"
 #include <iostream>
+#include <math.h>
 using namespace std;
 
 # define MAX_RANGE_GRANADE 15
@@ -136,7 +137,6 @@ void Player::getAmmpFromStorage(Storage* allStorage, int id)
 
 void Player::attack(int maze[MSZ][MSZ],double map[MSZ][MSZ],Player* allPlayers, int index,double angle,double dist)																			/////
 {
-	int kindOfShot;
 	double currX, currY;
 	double hurt = 1;
 	currX = (2 * col / MSZ) - 1;

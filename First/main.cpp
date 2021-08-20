@@ -35,8 +35,6 @@ Storage medicineStore[NUM_ROOMS*STORE_IN_ROOM];			// 12x1
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
 Player allPlayers[NUM_TEAM_PLAYERS*2];
-int numOfPlayers = 10;
-
 
 void InitMaze();
 void InitRooms();
@@ -350,6 +348,7 @@ void DoAction(int runIndex)
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
 		if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 		{
+<<<<<<< HEAD
 			cout << "Can Attack! " << endl;
 			//allPlayers[runIndex].attack(maze,security_map,allPlayers, enemyID, angle,dist);
 			//if (isAHit())
@@ -363,6 +362,15 @@ void DoAction(int runIndex)
 			//	}
 			//	numOfPlayers--;		// update the number of players
 			//}
+=======
+			allPlayers[runIndex].attack(maze,security_map,allPlayers, enemyID, angle,dist);
+			if (isAHit())
+				allPlayers[enemyID].isHurt(dist);		// enemy is injured
+			if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
+			{
+				maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+			}
+>>>>>>> fd847f08fe56f231db0ad3464c8abe15ec7e2565
 		}
 		else
 		{
