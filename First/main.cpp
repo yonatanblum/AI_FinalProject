@@ -35,8 +35,6 @@ Storage medicineStore[NUM_ROOMS*STORE_IN_ROOM];			// 12x1
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
 Player allPlayers[NUM_TEAM_PLAYERS*2];
-int numOfPlayers = 10;
-
 
 void InitMaze();
 void InitRooms();
@@ -356,11 +354,6 @@ void DoAction(int runIndex)
 			if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
 			{
 				maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
-				for (int i = enemyID; i < numOfPlayers-1; i++)						// delete player from array
-				{
-					allPlayers[i] = allPlayers[i + 1];		// arrenge the array
-				}
-				numOfPlayers--;		// update the number of players
 			}
 		}
 		else
