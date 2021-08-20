@@ -59,6 +59,7 @@ public :
 	int getNumOfMedicine() { return numOfMedicine; };
 	
 	void attack(int maze[MSZ][MSZ], double map[MSZ][MSZ],Player* allPlayers, int index,double angle,double dist);		//////
-	void isHurt(int distOfShot);												//////										/////
+	void isHurt(int distOfShot);	
+	void printPlayer();
 };
 

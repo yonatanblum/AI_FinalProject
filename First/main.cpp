@@ -20,6 +20,8 @@ using namespace std;
 const int NUM_ROOMS = 12;
 const int NUM_TEAM_PLAYERS = 5; 
 const int STORE_IN_ROOM = 1;
+const int MAX_RANGE_ATTACK = 20;
+const int MIN_RANGE_ATTACK = 0;
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -329,16 +331,22 @@ bool isAHit()																				/////
 	return hit;
 }
 
+double calcAngleBetweenPlayers(int idPlayer, int idEnemy) 
+{
+	return calcAngleBetweenCells(allPlayers[idPlayer].getRow(), allPlayers[idPlayer].getCol(), allPlayers[idEnemy].getRow(), allPlayers[idEnemy].getCol());
+}
+
 void DoAction(int runIndex)
 {
 	int teamNum = getTeamNum(runIndex);
 	int targetTeam= getTeamTarget(runIndex);
 	
 	runPlayer = true;
+	allPlayers[runIndex].printPlayer();
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
-		double angle = calcAngleBetweenPlayers(allPlayers[runIndex], allPlayers[enemyID]);
+		double angle = calcAngleBetweenPlayers(runIndex,enemyID);
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
 		if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 		{

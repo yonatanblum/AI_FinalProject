@@ -1,5 +1,6 @@
 #include "Player.h"
 #include <iostream>
+using namespace std;
 
 # define MAX_RANGE_GRANADE 15
 # define MAX_RANGE_BULLET 2*15
@@ -27,6 +28,7 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	}
 
 	mode=0; // mode can be survival=1 or attack=0 
+	this->printPlayer();
 }
 
 Player::Player()
@@ -172,4 +174,13 @@ void Player::isHurt(int distOfShot)																								/////
 	healthPoints = healthPoints - injuryLevel;
 	if (healthPoints <= 0)
 		healthPoints = 0;
+}
+
+
+void Player::printPlayer()
+{
+	cout << "--------Print Player num : " << id <<" -----------------------" <<endl;
+	cout << "Cell : (" << x << "," << y << ") | type : " << type <<" mode : "<< mode << " | healthPoints : " << healthPoints<< " teamNum : "<< teamNum<< endl;
+	cout <<"numOfBullets : " <<numOfBullets  <<" numOfGranades : " << numOfGranades << " numOfMedicine" << numOfMedicine <<endl;
+	cout << "End to Print Player num : " << id <<" -----------------------"<<  endl;
 }
