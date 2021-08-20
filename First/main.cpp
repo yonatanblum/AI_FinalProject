@@ -106,8 +106,8 @@ void InitPlayers()
 		else teamNum = PLAYER1;
 		AddPlayerToMaze(i, teamNum, roomIndex);
 		
+		allPlayers[i].printPlayer();
 	}
-	
 }
 
 
@@ -294,7 +294,7 @@ bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)					
 	printf("enemy row = %d , enemy col = %d\n", enemy.getRow(), col = enemy.getCol());
 	printf("stepX = %lf , stepY = %lf\n", stepX, stepY);
 	printf("distance = %lf\n", dist);
-	while (row!= enemy.getRow() && col!= enemy.getCol())
+	while (row!= enemy.getRow() || col!= enemy.getCol())
 	{
 		printf("row = %d , col = %d", row, col);
 		x = x + stepX;
@@ -350,18 +350,19 @@ void DoAction(int runIndex)
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
 		if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 		{
-			allPlayers[runIndex].attack(maze,security_map,allPlayers, enemyID, angle,dist);
-			if (isAHit())
-				allPlayers[enemyID].isHurt(dist);		// enemy is injured
-			if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
-			{
-				maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
-				for (int i = enemyID; i < numOfPlayers-1; i++)						// delete player from array
-				{
-					allPlayers[i] = allPlayers[i + 1];		// arrenge the array
-				}
-				numOfPlayers--;		// update the number of players
-			}
+			cout << "Can Attack! " << endl;
+			//allPlayers[runIndex].attack(maze,security_map,allPlayers, enemyID, angle,dist);
+			//if (isAHit())
+			//	allPlayers[enemyID].isHurt(dist);		// enemy is injured
+			//if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
+			//{
+			//	maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+			//	for (int i = enemyID; i < numOfPlayers-1; i++)						// delete player from array
+			//	{
+			//		allPlayers[i] = allPlayers[i + 1];		// arrenge the array
+			//	}
+			//	numOfPlayers--;		// update the number of players
+			//}
 		}
 		else
 		{

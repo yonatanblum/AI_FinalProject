@@ -15,7 +15,10 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	this->col = y;
 	x = ((2 * col / MSZ) - 1);
 	y = ((2 * row / MSZ) - 1);
-	this->numOfBullets = NUM_BULLETS, this->numOfGranades= MAX_GRANADES, this->numOfMedicine= MAX_HEALTH;
+	numOfBullets = NUM_BULLETS;
+	//cout << "numOfBullets" << numOfBullets<< endl; 
+	this->numOfGranades = MAX_GRANADES;
+	this->numOfMedicine = MAX_HEALTH;
 
 	for (int i= 0; i < MAX_GRANADES ;i++)
 	{
@@ -28,7 +31,7 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	}
 
 	mode=0; // mode can be survival=1 or attack=0 
-	this->printPlayer();
+	//this->printPlayer();
 }
 
 Player::Player()
@@ -180,7 +183,7 @@ void Player::isHurt(int distOfShot)																								/////
 void Player::printPlayer()
 {
 	cout << "--------Print Player num : " << id <<" -----------------------" <<endl;
-	cout << "Cell : (" << x << "," << y << ") | type : " << type <<" mode : "<< mode << " | healthPoints : " << healthPoints<< " teamNum : "<< teamNum<< endl;
-	cout <<"numOfBullets : " <<numOfBullets  <<" numOfGranades : " << numOfGranades << " numOfMedicine" << numOfMedicine <<endl;
+	cout << "Cell : (" << row << "," << col << ") | type : " << type <<" mode : "<< mode << " | healthPoints : " << healthPoints<< " teamNum : "<< teamNum<< endl;
+	cout <<"numOfBullets : " <<numOfBullets  <<" numOfGranades : " << numOfGranades << " numOfMedicine " << numOfMedicine <<endl;
 	cout << "End to Print Player num : " << id <<" -----------------------"<<  endl;
 }
