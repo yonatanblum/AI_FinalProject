@@ -76,8 +76,6 @@ void Bullet::SimulateFire(int maze[MSZ][MSZ], double security_map[MSZ][MSZ], dou
 			simulate = false;
 		else // maze[row][column] is SPACE
 		{
-			ShowMe();
-			maze[row][column] = BULLET;
 			security_map[row][column] += hurt;
 			x += SPEED * dirx;
 			y += SPEED * diry;
