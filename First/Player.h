@@ -15,10 +15,15 @@ private:
 	int type; // type can be attacker=0 or squire =1
 	int healthPoints;
 	int teamNum; 
+	int numOfBullets;
+	int numOfGranades;
+	int numOfMedicine;
 	int row, col;
+	double x, y;													//////
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
-	int numOfBullets, numOfGranades , numOfMedicine;
+	Bullet* bullet;													//////
+	Granade* granade;												//////
 	int mode; // mode can be survival=1 or attack=0 
 
 
@@ -30,14 +35,13 @@ public :
 	int searchToHelp(Player* allPlayers, int maxPlayers);
 	int searchStorage(Storage* allStorage, int maxStorage);
 
-	void getAmmpFromStorage(Storage* allStorage, int id);
+	void getAmmoFromStorage(Storage* allStorage, int id);
 	void getMedFromStorage(Storage* allStorage, int id);
 	//void checkHealth();
 	void escape();
 	void ammoRefill();
 	void improvingHealthPoints();
 
-	void fire();
 	void move();
 	void heal(int points);
 
@@ -47,11 +51,19 @@ public :
 	int getType() { return type; };
 	int getRow() { return row; };
 	int getCol() { return col; };
+	double getX() { return x; };																																//////
+	double getY() { return y; };		
 	int getId() { return id; };
 	int getTeamNum() { return teamNum; };
 	int getHealthPoints() { return healthPoints; };
 	int getNumOfBullets() { return numOfBullets; };
 	int getNumOfGranades() { return numOfGranades; };
 	int getNumOfMedicine() { return numOfMedicine; };
+	
+	void attack(int maze[MSZ][MSZ], double map[MSZ][MSZ],Player* allPlayers, int index,double angle,double dist);		//////
+	void isHurt(int distOfShot);
+	bool isAlive() { return healthPoints > 0; };
+	bool isEmpty();
+	void printPlayer();
 };
 

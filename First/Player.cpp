@@ -1,5 +1,11 @@
 #include "Player.h"
 #include <iostream>
+#include <math.h>
+using namespace std;
+
+const int MAX_RANGE_GRANADE = 15;
+const int MAX_RANGE_BULLET = 30;
+
 
 
 Player::Player(int x, int y ,int id, int type , int teamNum)
@@ -10,7 +16,12 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	this->teamNum = teamNum;
 	this->row = x;
 	this->col = y;
-	this->numOfBullets = NUM_BULLETS, this->numOfGranades= MAX_GRANADES, this->numOfMedicine= MAX_HEALTH;
+	x = ((2 * col / MSZ) - 1);
+	y = ((2 * row / MSZ) - 1);
+	numOfBullets = NUM_BULLETS;
+	//cout << "numOfBullets" << numOfBullets<< endl; 
+	this->numOfGranades = MAX_GRANADES;
+	this->numOfMedicine = MAX_HEALTH;
 
 	for (int i= 0; i < MAX_GRANADES ;i++)
 	{
@@ -23,11 +34,15 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 	}
 
 	mode=0; // mode can be survival=1 or attack=0 
+	//this->printPlayer();
 }
 
 Player::Player()
 {
-	this->healthPoints = MAX_HEALTH;
+	healthPoints = MAX_HEALTH;
+	numOfBullets = NUM_BULLETS;
+	numOfGranades = MAX_GRANADES;
+	numOfMedicine = MAX_HEALTH;
 
 	for (int i = 0; i < MAX_GRANADES; i++)
 	{
@@ -118,9 +133,68 @@ int Player::searchStorage(Storage* allStorage, int maxStorage)
 	return nearest;
 }
 
-void Player::getAmmpFromStorage(Storage* allStorage, int id)
+void Player::getAmmoFromStorage(Storage* allStorage, int id)
 {
 	if (this->numOfBullets == 0) this->numOfBullets = allStorage[id].getCharge(NUM_PLAYER_BULLETS);
 	if (this->numOfGranades == 0) this->numOfGranades = allStorage[id].getCharge(MAX_GRANADES);
 
+}
+
+void Player::attack(int maze[MSZ][MSZ],double map[MSZ][MSZ],Player* allPlayers, int index,double angle,double dist)																			/////
+{
+	double currX, currY;
+	double hurt = 1;
+	currX = (2 * col / MSZ) - 1;
+	currY = (2 * row / MSZ) - 1;
+	if (dist > MAX_RANGE_GRANADE)
+	{
+		if (numOfBullets != 0)
+		{
+			bullet = new Bullet(currX, currY, angle);
+			bullet->Fire();
+			numOfBullets--;
+			cout << "------ Shut Bullet!!!! ----------\n";
+			bullet->SimulateFire(maze, map, hurt);
+			bullet = NULL;
+		}
+	}
+	else
+	{
+		if (numOfGranades != 0)
+		{
+			granade = new Granade(currX, currY);
+			granade->Explode();
+			numOfGranades--;
+			cout << "------ Throw Granade!!!! ----------\n";
+			granade->SimulateExplosion(maze, map, hurt);
+			granade = NULL;
+		}
+	}
+}
+
+void Player::isHurt(int distOfShot)																								/////
+{
+	int injuryLevel;
+	if (distOfShot > MAX_RANGE_GRANADE)			// hit by bullet (long range)
+		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_BULLET + 1) / 10);			// differential formula based on distance from the shot.
+	else                     // hit by granade
+		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_GRANADE + 1) / 10);
+	healthPoints = healthPoints - injuryLevel;
+	if (healthPoints <= 0)
+		healthPoints = 0;
+}
+
+
+void Player::printPlayer()
+{
+	cout << "--------Print Player num : " << id <<" -----------------------" <<endl;
+	cout << "Cell : (" << row << "," << col << ") | type : " << type <<" mode : "<< mode << " | healthPoints : " << healthPoints<< " teamNum : "<< teamNum<< endl;
+	cout <<"numOfBullets : " <<numOfBullets  <<" numOfGranades : " << numOfGranades << " numOfMedicine " << numOfMedicine <<endl;
+	cout << "End to Print Player num : " << id <<" -----------------------"<<  endl;
+}
+
+bool Player::isEmpty()
+{
+	if (numOfBullets == 0 && numOfGranades == 0) return true;
+	return false;
 }

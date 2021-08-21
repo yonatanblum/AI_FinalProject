@@ -47,7 +47,9 @@ int* Room::getRandPosition(int maze[MSZ][MSZ])
 
 bool Room::isValidCell(int maze[MSZ][MSZ], int r, int c)							
 {
-	if (maze[r][c] != SPACE || maze[r+1][c] != SPACE || maze[r][c+1] != SPACE || maze[r+1][c+1] != SPACE)
+	if (maze[r][c] != SPACE || maze[r + 1][c] != SPACE || maze[r][c + 1] != SPACE || maze[r + 1][c + 1] != SPACE || 
+	    maze[r][c-1] != SPACE || maze[r + 1][c-1] != SPACE || maze[r-1][c] != SPACE || maze[r - 1][c + 1] != SPACE || 
+	    maze[r][c+2] != SPACE || maze[r + 1][c+2] != SPACE || maze[r + 2][c+1] != SPACE || maze[r + 2][c] != SPACE )		
 		return false;
 	return true;
 }

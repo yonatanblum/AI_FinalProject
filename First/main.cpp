@@ -1,5 +1,5 @@
-#include "glut.h"
-#include <time.h>
+#include "glut.h"//
+#include <time.h>//
 #include "Cell.h"
 #include <vector>
 #include <iostream>
@@ -8,18 +8,21 @@
 #include "CompareCells.h"
 #include "Bullet.h"
 #include "Granade.h"
-#include<windows.h>
+#include <windows.h>
 #include "Player.h"
-#include "Storage.h"											
+#include "Storage.h"			
+#include <math.h>
 
-
+//NIR Branch
 using namespace std;
 
 
 
 const int NUM_ROOMS = 12;
-const int NUM_TEAM_PLAYERS = 5; 
-const int STORE_IN_ROOM = 1;									
+const int NUM_TEAM_PLAYERS = 1; 
+const int STORE_IN_ROOM = 1;
+const int MAX_RANGE_ATTACK = 20;
+const int MIN_RANGE_ATTACK = 0;
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -29,11 +32,10 @@ bool runGame = false, runPlayer;
 vector <Cell*> grayss[NUM_TEAM_PLAYERS*2];
 Room rooms[NUM_ROOMS];
 Storage ammoStore[NUM_ROOMS*STORE_IN_ROOM];			// 12x1				
-Storage medicineStore[NUM_ROOMS*STORE_IN_ROOM];		// 12x1			
+Storage medicineStore[NUM_ROOMS*STORE_IN_ROOM];			// 12x1			
 Bullet* pb = nullptr;
 Granade* pg = nullptr;
 Player allPlayers[NUM_TEAM_PLAYERS*2];
-
 
 void InitMaze();
 void InitRooms();
@@ -102,9 +104,8 @@ void InitPlayers()
 		if (i >= NUM_TEAM_PLAYERS) teamNum = PLAYER2;
 		else teamNum = PLAYER1;
 		AddPlayerToMaze(i, teamNum, roomIndex);
-		
+		allPlayers[i].printPlayer();
 	}
-	
 }
 
 
@@ -115,9 +116,10 @@ void AddPlayerToMaze(int id,int teamNum, int roomIndex)
 	maze[r][c] = teamNum;
 	cout << "r : " << r << ", c : " << c << endl;
 	allPlayers[id].setPosition(r, c);
-	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
-		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
-	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
+	//if (NUM_TEAM_PLAYERS > 1 && id == 0) 
+		//allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
+	//else
+	allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
 	Cell* pc = new Cell(r, c, nullptr,9999.0,0);
 	grayss[id].push_back(pc);
 }
@@ -259,46 +261,168 @@ void CheckNeighborByPoint(Cell* pcurrent, int row, int col, int id,int rowT, int
 	}
 }
 
+double distanceOfPlayers(Player p1,Player p2)	// distance between attacker and enemy								/////
+{
+	double dist = sqrt(pow(p1.getRow() - p2.getRow(), 2) + pow(p1.getCol() - p2.getCol(), 2));
+	return dist;
+}
+
+double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int centerCol2)	// angle between attacker and enemy		/////
+{
+	double angle;
+	int lengthX = centerCol2 - centerCol1;
+	int lengthY = centerRow2 - centerRow1;
+	if (lengthX == 0 && lengthY == 0)
+		angle = 0;
+	else if (lengthX == 0 || lengthY==0)
+		angle = 3.14 / 2;
+	else
+		angle = atan(lengthY / lengthX);
+	return angle;
+}
+
+bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
+{
+	double lengthY = enemy.getCol() - attacker.getCol();
+	double lengthX = enemy.getRow() - attacker.getRow();
+	double stepX = lengthX / dist;
+	double stepY = lengthY / dist;
+	double x = attacker.getRow(); double y = attacker.getCol();
+	int row = attacker.getRow(), col = attacker.getCol();
+	printf("attacker row = %d , attacker col = %d\n", attacker.getRow(), col = attacker.getCol());
+	printf("enemy row = %d , enemy col = %d\n", enemy.getRow(), col = enemy.getCol());
+	printf("stepX = %lf , stepY = %lf\n", stepX, stepY);
+	printf("distance = %lf\n", dist);
+	double dirx, diry;
+	double dir_angle = atan2(lengthY,lengthX); // in rads
+	dirx = cos(dir_angle);
+	diry = sin(dir_angle);
+	while (x!= enemy.getRow() || y!= enemy.getCol())
+	{
+
+		int angleInDegree = dir_angle * 180 / 3.14; //angle in degree
+		printf("row = %d , col = %d", row, col);
+		//x = x + stepX;
+		//y = y + stepY;
+		
+		col = (int)(MSZ * (x + 1) / 2);
+		row = (int)(MSZ * (y + 1) / 2);
+		printf("row = %d , col = %d\n", row, col);
+		if (maze[row][col] == WALL || maze[row][col] == AMMO_STORE || maze[row][col] == MEDICINE_STORE )  // toDO - add same team player
+			return false;
+		else
+		{
+			x += dirx;
+			y += diry;
+		}
+	}
+	return true;
+}
+
+bool canAttack(Player attacker, Player enemy,double angle,double dist)
+{
+	if ( dist <= MAX_RANGE_ATTACK)
+	{
+		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
+			return true;
+	}
+	return false;
+}
+
+bool isAHit()																				/////
+{
+	bool hit = false;
+	if ((rand() % 100) < 30)
+	{
+		hit = true;
+		cout << "-----------------it's a hit!!!!!!----------------------\n";
+	}
+	else
+		cout << "---------------------it's a miss!!!!!----------------------\n";
+	return hit;
+}
+
+double calcAngleBetweenPlayers(int idPlayer, int idEnemy) 
+{
+	return calcAngleBetweenCells(allPlayers[idPlayer].getRow(), allPlayers[idPlayer].getCol(), allPlayers[idEnemy].getRow(), allPlayers[idEnemy].getCol());
+}
+
+void movePlayer(int runIndex ,int enemyID)
+{
+	runPlayer = true;
+	while (runPlayer)
+	{
+		AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+	}
+}
+
+void attackPlayer(int runIndex, int enemyID, int angle , int dist)
+{
+	
+
+	allPlayers[runIndex].attack(maze, security_map, allPlayers, enemyID, angle, dist);
+	if (isAHit())
+		allPlayers[enemyID].isHurt(dist);		// enemy is injured
+	if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
+	{
+		maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+	}
+}
+
+void playerStorageSaction(int runIndex)
+{
+	int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
+	if (helpId != -1)
+	{
+		while (runPlayer)
+		{
+			int mStorageId = allPlayers[runIndex].searchStorage(medicineStore, NUM_ROOMS * STORE_IN_ROOM);
+			int aStorageId = allPlayers[runIndex].searchStorage(ammoStore, NUM_ROOMS * STORE_IN_ROOM);
+			if (allPlayers[runIndex].getNumOfMedicine() == 0 && mStorageId != -1) //search for medicine 
+			{
+				AStarIterationByPoint(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
+				if (!runPlayer) allPlayers[runIndex].getAmmoFromStorage(medicineStore, mStorageId);
+			}
+			else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
+			{
+				AStarIterationByPoint(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
+				if (!runPlayer) allPlayers[runIndex].getAmmoFromStorage(ammoStore, aStorageId);
+			}
+			else AStarIterationByPoint(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
+		}
+	}
+}
 
 void DoAction(int runIndex)
 {
 	int teamNum = getTeamNum(runIndex);
 	int targetTeam= getTeamTarget(runIndex);
 	
-	runPlayer = true;
+	allPlayers[runIndex].printPlayer();
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
-		while (runPlayer)
+		double angle = calcAngleBetweenPlayers(runIndex, enemyID);
+		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
+		if (allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
 		{
-		AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+			if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
+			{
+				attackPlayer(runIndex,enemyID, angle, dist);
+			}
+			else
+			{
+				movePlayer(runIndex,enemyID);
+			}
 		}
 	}
 	else
 	{
-
-		int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
-		if (helpId != -1)
-		{
-			while (runPlayer)
-			{
-				int mStorageId = allPlayers[runIndex].searchStorage(medicineStore, NUM_ROOMS * STORE_IN_ROOM);
-				int aStorageId = allPlayers[runIndex].searchStorage(ammoStore, NUM_ROOMS * STORE_IN_ROOM);
-				if (allPlayers[runIndex].getNumOfMedicine()==0 && mStorageId!=-1) //search for medicine 
-				{
-					AStarIterationByPoint(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
-					if (!runPlayer) allPlayers[runIndex].getAmmpFromStorage(medicineStore, mStorageId);
-				}
-				else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
-				{
-					AStarIterationByPoint(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
-					if (!runPlayer) allPlayers[runIndex].getAmmpFromStorage(ammoStore, aStorageId);
-				}
-				else AStarIterationByPoint(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
-			}
-		}
+		playerStorageSaction(runIndex);	
 	}
 }
+
+
 
 
 
@@ -307,7 +431,10 @@ void RunGame()
 	for (int i = 0; i < NUM_TEAM_PLAYERS*2; i++)
 	//for (int i = 1; i < 3; i++)
 	{
-		DoAction(i);
+		if (allPlayers[i].isAlive())
+		{
+			DoAction(i);
+		}
 	}
 }
 
