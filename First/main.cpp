@@ -444,9 +444,9 @@ void DoAction(int runIndex)
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
 		double angle = calcAngleBetweenPlayers(runIndex, enemyID);
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
-		if (allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
+		if (!allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
 		{
-			if (canAttack(allPlayers[runIndex], allPlayers[enemyID]))
+			if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 			{
 				attackPlayer(runIndex,enemyID,angle,dist);
 			}
