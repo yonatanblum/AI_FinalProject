@@ -281,7 +281,7 @@ double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int
 	return angle;
 }
 
-bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
+/*bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)	// former function - not deleting it before we are sure the new one is ok																	/////
 {
 	double lengthY = enemy.getCol() - attacker.getCol();
 	double lengthX = enemy.getRow() - attacker.getRow();
@@ -319,11 +319,51 @@ bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)					
 	return true;
 }
 
-bool canAttack(Player attacker, Player enemy,double angle,double dist)
+bool canAttack(Player attacker, Player enemy,double angle,double dist)		// former function - not deleting it before we are sure the new one is ok
 {
 	if ( dist <= MAX_RANGE_ATTACK)
 	{
 		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
+			return true;
+	}
+	return false;
+}*/
+
+
+bool haveEyeContact(Player attacker, Player enemy)	// new function - check the printing!!!																	/////
+{
+	int i, j, enemyi, enemyj;
+	double enemyRow, enemyCol, row, col, lengthRow,lengthCol,distRC,stepRow,stepCol,di,dj;
+	i = attacker.getRow(), j = attacker.getCol();		// (i,j) = (cell row index, cell col index)
+	enemyi = enemy.getRow(), enemyj = enemy.getCol();	// enemy cell indexes
+	row = (H / MSZ) * i; col = (W / MSZ) * j;		// start point (row,col) in board size 600x600
+	enemyRow = (H / MSZ) * enemyi;  enemyCol = (W / MSZ) * enemyj;		// enemy (row,col) in board 600x600
+	lengthRow = enemyRow - row;  lengthCol = enemyCol - col;		// distance between players rows and columns in board 600x600
+	distRC = sqrt(pow(lengthRow, 2) + pow(lengthCol, 2));			// mathematical distance between players in board 600x600
+	stepRow = lengthRow / distRC;  stepCol = lengthCol / distRC;		// the step that is done each time in row and in column
+	printf("attacker i = %d , attacker j = %d\n", attacker.getRow(), attacker.getCol());
+	printf("enemy i = %d , enemy j = %d\n", enemy.getRow(), enemy.getCol());
+	printf("start row = %lf , start col = %lf\n", row, col);
+	printf("row length = %lf , col length = %lf , distRC = %lf\n", lengthRow, lengthCol, distRC);
+	printf("row step = %lf , col step = %lf\n", stepRow,stepCol);
+	while (i!= enemyi || j!= enemyj)
+	{
+		col = col + stepCol;		
+		row = row + stepRow;
+		j = (int)(col / (W/MSZ));
+		i = (int)(row / (H/MSZ));
+		printf("row = %lf , col = %lf , i = %d , j = %d , cell = %d\n", row, col, i , j, maze[i][j]);
+		if (maze[i][j] == WALL || maze[i][j] == AMMO_STORE || maze[i][j] == MEDICINE_STORE )  // toDO - add same team player
+			return false;
+	}
+	return true;
+}
+
+bool canAttack(Player attacker, Player enemy,double angle,double dist)		// new function
+{
+	if (dist <= MAX_RANGE_ATTACK && dist >= MIN_RANGE_ATTACK)
+	{
+		if (haveEyeContact(attacker, enemy))
 			return true;
 	}
 	return false;
@@ -406,9 +446,9 @@ void DoAction(int runIndex)
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
 		if (allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
 		{
-			if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
+			if (canAttack(allPlayers[runIndex], allPlayers[enemyID]))
 			{
-				attackPlayer(runIndex,enemyID, angle, dist);
+				attackPlayer(runIndex,enemyID,angle,dist);
 			}
 			else
 			{
