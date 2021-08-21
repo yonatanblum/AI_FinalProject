@@ -193,6 +193,7 @@ void AStarIterationByPoint(int runIndex,int rowT, int colT)
 	if (grayss[runIndex].empty())
 	{
 		cout << "There is no solution\n";
+		return;
 	}
 	else // there are gray cells
 	{
