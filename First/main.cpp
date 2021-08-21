@@ -321,7 +321,7 @@ bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)					
 
 bool canAttack(Player attacker, Player enemy,double angle,double dist)
 {
-	if (dist <= MAX_RANGE_ATTACK && dist >= MIN_RANGE_ATTACK)
+	if ( dist <= MAX_RANGE_ATTACK)
 	{
 		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
 			return true;
@@ -347,61 +347,82 @@ double calcAngleBetweenPlayers(int idPlayer, int idEnemy)
 	return calcAngleBetweenCells(allPlayers[idPlayer].getRow(), allPlayers[idPlayer].getCol(), allPlayers[idEnemy].getRow(), allPlayers[idEnemy].getCol());
 }
 
+void movePlayer(int runIndex ,int enemyID)
+{
+	runPlayer = true;
+	while (runPlayer)
+	{
+		AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+	}
+}
+
+void attackPlayer(int runIndex, int enemyID, int angle , int dist)
+{
+	
+
+	allPlayers[runIndex].attack(maze, security_map, allPlayers, enemyID, angle, dist);
+	if (isAHit())
+		allPlayers[enemyID].isHurt(dist);		// enemy is injured
+	if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
+	{
+		maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+	}
+}
+
+void playerStorageSaction(int runIndex)
+{
+	int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
+	if (helpId != -1)
+	{
+		while (runPlayer)
+		{
+			int mStorageId = allPlayers[runIndex].searchStorage(medicineStore, NUM_ROOMS * STORE_IN_ROOM);
+			int aStorageId = allPlayers[runIndex].searchStorage(ammoStore, NUM_ROOMS * STORE_IN_ROOM);
+			if (allPlayers[runIndex].getNumOfMedicine() == 0 && mStorageId != -1) //search for medicine 
+			{
+				AStarIterationByPoint(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
+				if (!runPlayer) allPlayers[runIndex].getAmmoFromStorage(medicineStore, mStorageId);
+			}
+			else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
+			{
+				AStarIterationByPoint(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
+				if (!runPlayer) allPlayers[runIndex].getAmmoFromStorage(ammoStore, aStorageId);
+			}
+			else AStarIterationByPoint(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
+		}
+	}
+}
+
 void DoAction(int runIndex)
 {
 	int teamNum = getTeamNum(runIndex);
 	int targetTeam= getTeamTarget(runIndex);
 	
-	runPlayer = true;
 	allPlayers[runIndex].printPlayer();
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
-		double angle = calcAngleBetweenPlayers(runIndex,enemyID);
+		double angle = calcAngleBetweenPlayers(runIndex, enemyID);
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
-		if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
+		if (allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
 		{
-			allPlayers[runIndex].attack(maze,security_map,allPlayers, enemyID, angle,dist);
-			if (isAHit())
-				allPlayers[enemyID].isHurt(dist);		// enemy is injured
-			if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
+			if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 			{
-				maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+				attackPlayer(runIndex,enemyID, angle, dist);
 			}
-		}
-		else
-		{
-			while (runPlayer)
+			else
 			{
-			AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+				movePlayer(runIndex,enemyID);
 			}
 		}
 	}
 	else
 	{
-
-		int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
-		if (helpId != -1)
-		{
-			while (runPlayer)
-			{
-				int mStorageId = allPlayers[runIndex].searchStorage(medicineStore, NUM_ROOMS * STORE_IN_ROOM);
-				int aStorageId = allPlayers[runIndex].searchStorage(ammoStore, NUM_ROOMS * STORE_IN_ROOM);
-				if (allPlayers[runIndex].getNumOfMedicine()==0 && mStorageId!=-1) //search for medicine 
-				{
-					AStarIterationByPoint(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
-					if (!runPlayer) allPlayers[runIndex].getAmmpFromStorage(medicineStore, mStorageId);
-				}
-				else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
-				{
-					AStarIterationByPoint(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
-					if (!runPlayer) allPlayers[runIndex].getAmmpFromStorage(ammoStore, aStorageId);
-				}
-				else AStarIterationByPoint(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
-			}
-		}
+		playerStorageSaction(runIndex);	
 	}
 }
+
+
 
 
 
@@ -410,7 +431,10 @@ void RunGame()
 	for (int i = 0; i < NUM_TEAM_PLAYERS*2; i++)
 	//for (int i = 1; i < 3; i++)
 	{
-		DoAction(i);
+		if (allPlayers[i].isAlive())
+		{
+			DoAction(i);
+		}
 	}
 }
 

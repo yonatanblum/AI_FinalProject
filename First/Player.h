@@ -35,7 +35,7 @@ public :
 	int searchToHelp(Player* allPlayers, int maxPlayers);
 	int searchStorage(Storage* allStorage, int maxStorage);
 
-	void getAmmpFromStorage(Storage* allStorage, int id);
+	void getAmmoFromStorage(Storage* allStorage, int id);
 	void getMedFromStorage(Storage* allStorage, int id);
 	//void checkHealth();
 	void escape();
@@ -61,7 +61,9 @@ public :
 	int getNumOfMedicine() { return numOfMedicine; };
 	
 	void attack(int maze[MSZ][MSZ], double map[MSZ][MSZ],Player* allPlayers, int index,double angle,double dist);		//////
-	void isHurt(int distOfShot);	
+	void isHurt(int distOfShot);
+	bool isAlive() { return healthPoints > 0; };
+	bool isEmpty();
 	void printPlayer();
 };
 

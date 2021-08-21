@@ -133,7 +133,7 @@ int Player::searchStorage(Storage* allStorage, int maxStorage)
 	return nearest;
 }
 
-void Player::getAmmpFromStorage(Storage* allStorage, int id)
+void Player::getAmmoFromStorage(Storage* allStorage, int id)
 {
 	if (this->numOfBullets == 0) this->numOfBullets = allStorage[id].getCharge(NUM_PLAYER_BULLETS);
 	if (this->numOfGranades == 0) this->numOfGranades = allStorage[id].getCharge(MAX_GRANADES);
@@ -191,4 +191,10 @@ void Player::printPlayer()
 	cout << "Cell : (" << row << "," << col << ") | type : " << type <<" mode : "<< mode << " | healthPoints : " << healthPoints<< " teamNum : "<< teamNum<< endl;
 	cout <<"numOfBullets : " <<numOfBullets  <<" numOfGranades : " << numOfGranades << " numOfMedicine " << numOfMedicine <<endl;
 	cout << "End to Print Player num : " << id <<" -----------------------"<<  endl;
+}
+
+bool Player::isEmpty()
+{
+	if (numOfBullets == 0 && numOfGranades == 0) return true;
+	return false;
 }
