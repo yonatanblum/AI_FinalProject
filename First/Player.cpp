@@ -14,8 +14,6 @@ Player::Player(int x, int y, int id, int type, int teamNum)
 	this->teamNum = teamNum;
 	this->row = x;
 	this->col = y;
-	x = ((2 * col / MSZ) - 1);
-	y = ((2 * row / MSZ) - 1);
 	numOfBullets = NUM_BULLETS;
 	//cout << "numOfBullets" << numOfBullets<< endl; 
 	this->numOfGranades = MAX_GRANADES;
