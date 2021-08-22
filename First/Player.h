@@ -19,7 +19,7 @@ private:
 	int numOfGranades;
 	int numOfMedicine;
 	int row, col;
-	double x, y;													//////
+	//double x, y;													//////
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
 	Bullet* bullet;													//////
@@ -47,12 +47,14 @@ public :
 
 	void setPosition(int x, int y);
 	void setPlayer(int id,int  type, int teamNum);
-
+	
+	void setRow(int newRow) { row = newRow; };
+	void setCol(int newCol) { col = newCol; };
 	int getType() { return type; };
 	int getRow() { return row; };
 	int getCol() { return col; };
-	double getX() { return x; };																																//////
-	double getY() { return y; };		
+	//double getX() { return x; };																																//////
+	//double getY() { return y; };		
 	int getId() { return id; };
 	int getTeamNum() { return teamNum; };
 	int getHealthPoints() { return healthPoints; };
