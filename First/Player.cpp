@@ -1,10 +1,9 @@
 #include "Player.h"
 #include <iostream>
 #include <math.h>
+
 using namespace std;
 
-const int MAX_RANGE_GRANADE = 15;
-const int MAX_RANGE_BULLET = 30;
 
 
 
@@ -40,7 +39,7 @@ Player::Player(int x, int y ,int id, int type , int teamNum)
 Player::Player()
 {
 	healthPoints = MAX_HEALTH;
-	numOfBullets = NUM_BULLETS;
+	numOfBullets = NUM_PLAYER_BULLETS;
 	numOfGranades = MAX_GRANADES;
 	numOfMedicine = MAX_HEALTH;
 
@@ -154,7 +153,7 @@ void Player::attack(int maze[MSZ][MSZ],double map[MSZ][MSZ],Player* allPlayers, 
 			bullet->Fire();
 			numOfBullets--;
 			cout << "------ Shut Bullet!!!! ----------\n";
-			bullet->SimulateFire(maze, map, hurt);
+			//bullet->SimulateFire(maze, map, hurt); // TODO
 			bullet = NULL;
 		}
 	}
@@ -166,7 +165,7 @@ void Player::attack(int maze[MSZ][MSZ],double map[MSZ][MSZ],Player* allPlayers, 
 			granade->Explode();
 			numOfGranades--;
 			cout << "------ Throw Granade!!!! ----------\n";
-			granade->SimulateExplosion(maze, map, hurt);
+			//granade->SimulateExplosion(maze, map, hurt); TODO
 			granade = NULL;
 		}
 	}
@@ -176,9 +175,9 @@ void Player::isHurt(int distOfShot)																								/////
 {
 	int injuryLevel;
 	if (distOfShot > MAX_RANGE_GRANADE)			// hit by bullet (long range)
-		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_BULLET + 1) / 10);			// differential formula based on distance from the shot.
+		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_BULLET + 1) / 2);			// differential formula based on distance from the shot.
 	else                     // hit by granade
-		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_GRANADE + 1) / 10);
+		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_GRANADE + 1) / 2);
 	healthPoints = healthPoints - injuryLevel;
 	if (healthPoints <= 0)
 		healthPoints = 0;

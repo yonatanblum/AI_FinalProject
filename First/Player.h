@@ -2,10 +2,8 @@
 #include "Granade.h"
 #include "Bullet.h"
 #include "Storage.h"
+#include "Definitions.h"
 
-const int MAX_HEALTH = 100;
-const int MAX_GRANADES = 3;
-const int NUM_PLAYER_BULLETS = 50;
 
 class Player
 {

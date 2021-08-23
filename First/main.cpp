@@ -1,28 +1,25 @@
 #include "glut.h"//
 #include <time.h>//
-#include "Cell.h"
 #include <vector>
 #include <iostream>
-#include "Room.h"
+#include <math.h>
 #include <queue>
+#include <windows.h>
 #include "CompareCells.h"
 #include "Bullet.h"
 #include "Granade.h"
-#include <windows.h>
+#include "Room.h"
 #include "Player.h"
 #include "Storage.h"			
-#include <math.h>
+#include "Cell.h"
+#include "Definitions.h"
 
 //NIR Branch
 using namespace std;
 
 
 
-const int NUM_ROOMS = 12;
-const int NUM_TEAM_PLAYERS = 1; 
-const int STORE_IN_ROOM = 1;
-const int MAX_RANGE_ATTACK = 20;
-const int MIN_RANGE_ATTACK = 0;
+
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
@@ -116,10 +113,9 @@ void AddPlayerToMaze(int id,int teamNum, int roomIndex)
 	maze[r][c] = teamNum;
 	cout << "r : " << r << ", c : " << c << endl;
 	allPlayers[id].setPosition(r, c);
-	//if (NUM_TEAM_PLAYERS > 1 && id == 0) 
-		//allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
-	//else
-	allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
+	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
+		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
+	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
 	Cell* pc = new Cell(r, c, nullptr,9999.0,0);
 	grayss[id].push_back(pc);
 }
@@ -139,7 +135,8 @@ void ClearMaze(int id, int teamNum)
 		}
 
 	for (i = 0; i < NUM_TEAM_PLAYERS*2; i++) {
-		maze[allPlayers[i].getRow()][allPlayers[i].getCol()] = allPlayers[i].getTeamNum();
+		if (allPlayers[i].isAlive())
+			maze[allPlayers[i].getRow()][allPlayers[i].getCol()] = allPlayers[i].getTeamNum();
 	}
 	// mark out the start and the target cells
 
@@ -321,7 +318,7 @@ bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)					
 
 bool canAttack(Player attacker, Player enemy,double angle,double dist)
 {
-	if ( dist <= MAX_RANGE_ATTACK)
+	if ( dist <= MAX_RANGE_ATTACK && !(attacker.getNumOfBullets()==0 && dist > MAX_RANGE_GRANADE))
 	{
 		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
 			return true;
@@ -331,15 +328,13 @@ bool canAttack(Player attacker, Player enemy,double angle,double dist)
 
 bool isAHit()																				/////
 {
-	bool hit = false;
 	if ((rand() % 100) < 30)
 	{
-		hit = true;
 		cout << "-----------------it's a hit!!!!!!----------------------\n";
+		return true;
 	}
-	else
-		cout << "---------------------it's a miss!!!!!----------------------\n";
-	return hit;
+	cout << "---------------------it's a miss!!!!!----------------------\n";
+	return false;
 }
 
 double calcAngleBetweenPlayers(int idPlayer, int idEnemy) 
@@ -362,10 +357,12 @@ void attackPlayer(int runIndex, int enemyID, int angle , int dist)
 
 	allPlayers[runIndex].attack(maze, security_map, allPlayers, enemyID, angle, dist);
 	if (isAHit())
-		allPlayers[enemyID].isHurt(dist);		// enemy is injured
-	if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
 	{
-		maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+		allPlayers[enemyID].isHurt(dist);		// enemy is injured
+		if (allPlayers[enemyID].isAlive())								// if the attacked player is dead
+		{
+			maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+		}
 	}
 }
 
@@ -404,7 +401,7 @@ void DoAction(int runIndex)
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
 		double angle = calcAngleBetweenPlayers(runIndex, enemyID);
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
-		if (allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
+		if (!allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) if True
 		{
 			if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 			{
