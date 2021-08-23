@@ -63,22 +63,51 @@ void Bullet::SimulateFire(int maze[MSZ][MSZ], double security_map[MSZ][MSZ], dou
 {
 	bool simulate = true;
 	double dirx, diry;
-	int row, column;
-
+	int currentRow,currentCol,row, column,newRow,newCol,cellType,count; 
+	count = 0;
 	dirx = cos(dir_angle);
 	diry = sin(dir_angle);
 
-	while (simulate)
+	newRow = 999; newCol = 999;
+	currentCol = (int)(MSZ * (x + 1) / 2);
+	currentRow = (int)(MSZ * (y + 1) / 2);
+	printf("bullet cell = (%d,%d) , cell type = %d\n", currentRow, currentCol, maze[currentRow][currentCol]);
+	while (simulate && count<10)
 	{
 		column = (int)(MSZ * (x + 1) / 2);
 		row = (int)(MSZ * (y + 1) / 2);
-		if (maze[row][column] == WALL || maze[row][column] == AMMO_STORE || maze[row][column] == MEDICINE_STORE )
-			simulate = false;
-		else // maze[row][column] is SPACE
+		if (row == currentRow && column == currentCol)
 		{
-			security_map[row][column] += hurt;
-			x += SPEED * dirx;
-			y += SPEED * diry;
+			x = x + SPEED*dirx;
+			y = y + SPEED*diry;
 		}
-	}//while
+		else
+		{
+			if (maze[row][column] == WALL || maze[row][column] == AMMO_STORE || maze[row][column] == MEDICINE_STORE || maze[row][column] == PLAYER1 || maze[row][column] == PLAYER2)
+			{
+				printf("bullet cell = (%d,%d) , cell type = %d\n", row, column, maze[row][column]);
+				simulate = false;
+			}
+			else							// maze[row][column] is SPACE
+			{
+				security_map[row][column] += hurt;
+				if (row != newRow || column != newCol)
+				{
+					printf("bullet cell = (%d,%d) , cell type = %d\n", row, column, maze[row][column]);
+					count++;
+				}
+				newRow = row; newCol = column;
+				//ShowMe();
+				//maze[row][column] = BULLET;
+				x += SPEED * dirx;
+				y += SPEED * diry;
+			}
+		}
+	}
+	/*for (int i = 1; i < MSZ - 1; i++)			// clear the maze from bullets
+		for (int j = 1; j < MSZ - 1; j++)
+		{
+			if (maze[i][j] == BULLET)
+				maze[i][j] = SPACE;
+		}*/
 }

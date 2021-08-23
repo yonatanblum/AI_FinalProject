@@ -15,6 +15,7 @@ const int PLAYER1 = 7;
 const int PLAYER2 = 8;
 const int AMMO_STORE = 9;
 const int MEDICINE_STORE = 10;
+const int BULLET = 11;													
 
 
 const int MAX_RANGE_GRANADE = 15;
