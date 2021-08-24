@@ -41,10 +41,11 @@ public :
 
 	void move();
 	void heal(int points);
+	void healPlayer(int hp);
 
 	void setPosition(int x, int y);
 	void setPlayer(int id,int  type, int teamNum);
-	
+	void setHealthPoints(int hp) { healthPoints = hp; };
 	void setRow(int newRow) { row = newRow; };
 	void setCol(int newCol) { col = newCol; };
 	int getType() { return type; };

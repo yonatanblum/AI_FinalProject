@@ -22,7 +22,7 @@ const int MAX_RANGE_GRANADE = 15;
 const int MAX_RANGE_BULLET = 30;
 
 const int NUM_ROOMS = 12;
-const int NUM_TEAM_PLAYERS = 5;
+const int NUM_TEAM_PLAYERS = 2;
 const int STORE_IN_ROOM = 1;
 const int MAX_RANGE_ATTACK = 30;
 const int MIN_RANGE_ATTACK = 0;

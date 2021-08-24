@@ -197,3 +197,13 @@ bool Player::isEmpty()
 		return true;
 	return false;
 }
+
+void Player::heal(int hp)
+{
+	this->healthPoints += hp ;
+}
+
+void Player::healPlayer(int hp)
+{
+	this->numOfMedicine -= hp;
+}
