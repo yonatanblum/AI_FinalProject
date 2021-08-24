@@ -190,6 +190,7 @@ void AStarIterationByPoint(int runIndex,int rowT, int colT)
 	if (grayss[runIndex].empty())
 	{
 		cout << "There is no solution\n";
+		return;
 	}
 	else // there are gray cells
 	{
@@ -278,7 +279,7 @@ double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int
 	return angle;
 }
 
-bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
+/*bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
 {
 	double lengthY = enemy.getCol() - attacker.getCol();
 	double lengthX = enemy.getRow() - attacker.getRow();
@@ -321,6 +322,94 @@ bool canAttack(Player attacker, Player enemy,double angle,double dist)
 	if ( dist <= MAX_RANGE_ATTACK && !(attacker.getNumOfBullets()==0 && dist > MAX_RANGE_GRANADE))
 	{
 		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
+			return true;
+	}
+	return false;
+}*/
+
+bool haveEyeContact(Player attacker, Player enemy)	// new function - check the printing!!!																	/////
+{
+	int i, j, enemyi, enemyj;
+	double enemyRow, enemyCol, row, col, lengthRow, lengthCol, distRC, stepRow, stepCol, di, dj;
+	i = attacker.getRow(), j = attacker.getCol();		// (i,j) = (cell row index, cell col index)
+	enemyi = enemy.getRow(), enemyj = enemy.getCol();	// enemy cell indexes
+	row = (H / MSZ) * i; col = (W / MSZ) * j;		// start point (row,col) in board size 600x600
+	enemyRow = (H / MSZ) * enemyi;  enemyCol = (W / MSZ) * enemyj;		// enemy (row,col) in board 600x600
+	lengthRow = enemyRow - row;  lengthCol = enemyCol - col;		// distance between players rows and columns in board 600x600
+	distRC = sqrt(pow(lengthRow, 2) + pow(lengthCol, 2));			// mathematical distance between players in board 600x600
+	stepRow = lengthRow / distRC;  stepCol = lengthCol / distRC;		// the step that is done each time in row and in column
+	printf("attacker i = %d , attacker j = %d\n", attacker.getRow(), attacker.getCol());
+	printf("enemy i = %d , enemy j = %d\n", enemy.getRow(), enemy.getCol());
+	printf("start row = %lf , start col = %lf\n", row, col);
+	printf("row length = %lf , col length = %lf , distRC = %lf\n", lengthRow, lengthCol, distRC);
+	printf("row step = %lf , col step = %lf\n", stepRow, stepCol);
+	while (i != enemyi || j != enemyj)
+	{
+		col = col + stepCol;
+		row = row + stepRow;
+		j = (int)(col / (W / MSZ));
+		i = (int)(row / (H / MSZ));
+		printf("row = %lf , col = %lf , i = %d , j = %d , cell = %d\n", row, col, i, j, maze[i][j]);
+		if (maze[i][j] == WALL || maze[i][j] == AMMO_STORE || maze[i][j] == MEDICINE_STORE)  // toDO - add same team player
+			return false;
+	}
+	return true;
+}
+
+double moveBack(Player attacker,Player enemy,double dist)
+{
+	printf("---- Moving back... ----\n");
+	double currDist = dist;
+	int count = 0;
+	int lengthRow,lengthCol,row,col,enRow,enCol;
+	row = attacker.getRow(); col = attacker.getCol();
+	enRow = enemy.getRow(); enCol = enemy.getCol();
+	lengthRow = attacker.getRow() - enemy.getRow();
+	lengthCol = attacker.getCol() - enemy.getCol();
+	printf("Attacker cell = (%d,%d) , Enemy cell = (%d, %d) , Distance = %lf , count = %d\n", row, col,enRow, enCol, currDist,count);
+	while (currDist < MIN_RANGE_ATTACK)
+	{
+		row = attacker.getRow(); col = attacker.getCol();
+		lengthRow = attacker.getRow() - enemy.getRow();
+		lengthCol = attacker.getCol() - enemy.getCol();
+		if (maze[row + 1][col] == SPACE && lengthRow >= 0)
+		{
+			maze[row + 1][col] = maze[row][col];
+			attacker.setRow(row + 1);
+		}
+		else if (maze[row - 1][col] == SPACE && lengthRow <= 0)
+		{
+			maze[row - 1][col] = maze[row][col];
+			attacker.setRow(row - 1);
+		}
+		else if (maze[row][col + 1] == SPACE && lengthCol >= 0)
+		{
+			maze[row][col + 1] = maze[row][col];
+			attacker.setCol(col + 1);
+		}
+		else if (maze[row][col - 1] == SPACE && lengthCol <= 0)
+		{
+			maze[row][col - 1] = maze[row][col];
+			attacker.setCol(col - 1);
+		}
+		else
+			break;
+		maze[row][col] = SPACE;
+		row = attacker.getRow(); col = attacker.getCol();
+		lengthRow = attacker.getRow() - enemy.getRow();
+		lengthCol = attacker.getCol() - enemy.getCol();
+		currDist = distanceOfPlayers(attacker, enemy);
+		count++;
+		printf("attacker cell = (%d,%d) , enemy cell = (%d, %d) , distance = %lf , count = %d\n", row, col, enRow, enCol, currDist,count);
+	}
+	return currDist;
+}
+
+bool canAttack(Player attacker, Player enemy, double angle,double dist)		// new function
+{
+	if (dist <= MAX_RANGE_ATTACK && dist >= MIN_RANGE_ATTACK)
+	{
+		if (haveEyeContact(attacker, enemy))
 			return true;
 	}
 	return false;
@@ -393,35 +482,45 @@ void playerStorageSaction(int runIndex)
 void DoAction(int runIndex)
 {
 	int teamNum = getTeamNum(runIndex);
-	int targetTeam= getTeamTarget(runIndex);
-	
-	allPlayers[runIndex].printPlayer();
+	int targetTeam = getTeamTarget(runIndex);
+
+	//allPlayers[runIndex].printPlayer();
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
+		printf("\n----------------------------------------------------------- I'm an Attacker -----------------------------------------------\n");
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
 		double angle = calcAngleBetweenPlayers(runIndex, enemyID);
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
-		if (!allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) if True
+		if (!allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
 		{
 			if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 			{
-				attackPlayer(runIndex,enemyID, angle, dist);
+				printf("-------------------------------- Can Attack -------------------------------\n");
+				attackPlayer(runIndex, enemyID, angle, dist);
 			}
 			else
 			{
-				movePlayer(runIndex,enemyID);
+				printf("-------------------------------- Cannot Attack -------------------------------\n");
+				if (dist < MIN_RANGE_ATTACK)
+				{
+					dist = moveBack(allPlayers[runIndex], allPlayers[enemyID], dist);
+					if (canAttack(allPlayers[runIndex], allPlayers[enemyID], angle, dist))
+					{
+						printf("-------------------------------- Can Attack -------------------------------\n");
+						attackPlayer(runIndex, enemyID, angle, dist);
+					}
+				}
+				else
+					movePlayer(runIndex, enemyID);
 			}
 		}
 	}
 	else
 	{
-		playerStorageSaction(runIndex);	
+		printf("\n----------------------------------------------------------- I'm a Squire ------------------------------------------------------\n");
+		playerStorageSaction(runIndex);
 	}
 }
-
-
-
-
 
 void RunGame()
 {
