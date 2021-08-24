@@ -115,7 +115,8 @@ void AddPlayerToMaze(int id,int teamNum, int roomIndex)
 	allPlayers[id].setPosition(r, c);
 	if (NUM_TEAM_PLAYERS > 1 && id == 0) 
 		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
-	else allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
+	else 
+	allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
 	Cell* pc = new Cell(r, c, nullptr,9999.0,0);
 	grayss[id].push_back(pc);
 }
@@ -190,6 +191,8 @@ void AStarIterationByPoint(int runIndex,int rowT, int colT)
 	if (grayss[runIndex].empty())
 	{
 		cout << "There is no solution\n";
+		runGame = false;
+		runPlayer = false;
 		return;
 	}
 	else // there are gray cells
@@ -349,7 +352,7 @@ bool haveEyeContact(Player attacker, Player enemy)	// new function - check the p
 		row = row + stepRow;
 		j = (int)(col / (W / MSZ));
 		i = (int)(row / (H / MSZ));
-		printf("row = %lf , col = %lf , i = %d , j = %d , cell = %d\n", row, col, i, j, maze[i][j]);
+		//printf("row = %lf , col = %lf , i = %d , j = %d , cell = %d\n", row, col, i, j, maze[i][j]);
 		if (maze[i][j] == WALL || maze[i][j] == AMMO_STORE || maze[i][j] == MEDICINE_STORE)  // toDO - add same team player
 			return false;
 	}
@@ -417,7 +420,7 @@ bool canAttack(Player attacker, Player enemy, double angle,double dist)		// new 
 
 bool isAHit()																				/////
 {
-	if ((rand() % 100) < 30)
+	if ((rand() % 100) < 101) //TODO change to 40
 	{
 		cout << "-----------------it's a hit!!!!!!----------------------\n";
 		return true;
@@ -448,10 +451,11 @@ void attackPlayer(int runIndex, int enemyID, int angle , int dist)
 	if (isAHit())
 	{
 		allPlayers[enemyID].isHurt(dist);		// enemy is injured
-		if (allPlayers[enemyID].isAlive())								// if the attacked player is dead
+		if (!allPlayers[enemyID].isAlive())								// if the attacked player is dead
 		{
 			maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
 		}
+	allPlayers[enemyID].printPlayer();
 	}
 }
 
@@ -501,16 +505,16 @@ void DoAction(int runIndex)
 			else
 			{
 				printf("-------------------------------- Cannot Attack -------------------------------\n");
-				if (dist < MIN_RANGE_ATTACK)
-				{
-					dist = moveBack(allPlayers[runIndex], allPlayers[enemyID], dist);
-					if (canAttack(allPlayers[runIndex], allPlayers[enemyID], angle, dist))
-					{
-						printf("-------------------------------- Can Attack -------------------------------\n");
-						attackPlayer(runIndex, enemyID, angle, dist);
-					}
-				}
-				else
+				//if (dist < MIN_RANGE_ATTACK)
+				//{
+				//	//dist = moveBack(allPlayers[runIndex], allPlayers[enemyID], dist);
+				//	if (canAttack(allPlayers[runIndex], allPlayers[enemyID], angle, dist))
+				//	{
+				//		printf("-------------------------------- Can Attack -------------------------------\n");
+				//		attackPlayer(runIndex, enemyID, angle, dist);
+				//	}
+				//}
+				//else
 					movePlayer(runIndex, enemyID);
 			}
 		}
@@ -695,6 +699,7 @@ void PaveWay(int i, int j)
 		{
 			cout << "there is no solution: pq is empty\n";
 			go_on = false;
+
 			return;
 		}
 		else // pq is not empty

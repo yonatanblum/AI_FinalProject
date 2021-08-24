@@ -25,7 +25,7 @@ const int NUM_ROOMS = 12;
 const int NUM_TEAM_PLAYERS = 5;
 const int STORE_IN_ROOM = 1;
 const int MAX_RANGE_ATTACK = 30;
-const int MIN_RANGE_ATTACK = 11;
+const int MIN_RANGE_ATTACK = 0;
 
 const int MAX_HEALTH = 100;
 const int MAX_GRANADES = 10;
