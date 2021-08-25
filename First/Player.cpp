@@ -170,14 +170,14 @@ void Player::attack(int maze[MSZ][MSZ], double map[MSZ][MSZ], Player* allPlayers
 	}
 }
 
-void Player::isHurt(int distOfShot)																								/////
+void Player::isHurt(double distOfShot)																								
 {
 	int injuryLevel;
 	if (distOfShot > MAX_RANGE_GRANADE)			// hit by bullet (long range)
-		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_BULLET + 1) / 2);			// differential formula based on distance from the shot.
+		injuryLevel = (int)((distOfShot - (MAX_RANGE_BULLET + 5.0)) / 5.0);			// 16-20 --> -3  /  21-25 --> -2  /  26-30 --> -1
 	else                     // hit by granade
-		injuryLevel = (int)((-1)*(distOfShot - MAX_RANGE_GRANADE + 1) / 2);
-	healthPoints = healthPoints - injuryLevel;
+		injuryLevel = (int)((distOfShot - (MAX_RANGE_GRANADE + 3.0)) / 3.0);		// 1-3 --> -5   /   4-6 --> -4  /   7-9 --> -3   /   10-12 --> -2  / 13-15 --> -1
+	healthPoints = healthPoints + injuryLevel;
 	if (healthPoints <= 0)
 		healthPoints = 0;
 }
