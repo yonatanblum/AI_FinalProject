@@ -14,7 +14,6 @@
 #include "Cell.h"
 #include "Definitions.h"
 
-//NIR Branch
 using namespace std;
 
 
@@ -41,7 +40,7 @@ void DigTunnels();
 
 void initAllStorages();																		
 void addAllStoragesToRoom(int roomNum);														
-
+bool canGive(int id, int helpId);
 void InitPlayers();
 void AddPlayerToMaze(int id, int teamNum, int roomIndex);
 int getTeamNum(int ix);
@@ -124,7 +123,7 @@ void AddPlayerToMaze(int id,int teamNum, int roomIndex)
 	grayss[id].push_back(pc);
 }
 
-void ClearMaze(int id, int teamNum)
+void ClearMaze()
 {
 	int i, j;
 
@@ -194,7 +193,12 @@ void AStarIterationByPoint(int runIndex,int rowT, int colT)
 	if (grayss[runIndex].empty())
 	{
 		cout << "There is no solution\n";
-		runGame = false;
+		if (allPlayers[runIndex].isAlive())
+		{
+			Cell* pc = new Cell(allPlayers[runIndex].getRow(), allPlayers[runIndex].getCol(), nullptr, 9999.0, 0);
+			grayss[runIndex].push_back(pc);
+		}
+		//runGame = false;
 		runPlayer = false;
 		return;
 	}
@@ -242,20 +246,20 @@ void CheckNeighborByPoint(Cell* pcurrent, int row, int col, int id,int rowT, int
 		{
 			if (pcurrent->GetRow() == rowT && pcurrent->GetColumn() == colT) // 1 step before enemy
 			{
-				if (allPlayers[id].getType() == 1) //
-				{
-					doActionPlayer = true;
-				}
-				else
-				{
+				//if (allPlayers[id].getType() == 1) // //TODO remove this if not need it 
+				//{
+				//	doActionPlayer = true;
+				//}
+				/*else
+				{*/
 
 				runGame = false;
-				}
+				//}
 			}
 
 			//cout << "the solution has been found\n";
 			MoveToCell(pcurrent, id, allPlayers[id].getTeamNum());
-			ClearMaze(id, allPlayers[id].getTeamNum());
+			ClearMaze();
 
 			runPlayer = false;
 
@@ -292,54 +296,6 @@ double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int
 	return angle;
 }
 
-/*bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
-{
-	double lengthY = enemy.getCol() - attacker.getCol();
-	double lengthX = enemy.getRow() - attacker.getRow();
-	double stepX = lengthX / dist;
-	double stepY = lengthY / dist;
-	double x = attacker.getRow(); double y = attacker.getCol();
-	int row = attacker.getRow(), col = attacker.getCol();
-	printf("attacker row = %d , attacker col = %d\n", attacker.getRow(), col = attacker.getCol());
-	printf("enemy row = %d , enemy col = %d\n", enemy.getRow(), col = enemy.getCol());
-	printf("stepX = %lf , stepY = %lf\n", stepX, stepY);
-	printf("distance = %lf\n", dist);
-	double dirx, diry;
-	double dir_angle = atan2(lengthY,lengthX); // in rads
-	dirx = cos(dir_angle);
-	diry = sin(dir_angle);
-	while (x!= enemy.getRow() || y!= enemy.getCol())
-	{
-
-		int angleInDegree = dir_angle * 180 / 3.14; //angle in degree
-		printf("row = %d , col = %d", row, col);
-		//x = x + stepX;
-		//y = y + stepY;
-		
-		col = (int)(MSZ * (x + 1) / 2);
-		row = (int)(MSZ * (y + 1) / 2);
-		printf("row = %d , col = %d\n", row, col);
-		if (maze[row][col] == WALL || maze[row][col] == AMMO_STORE || maze[row][col] == MEDICINE_STORE )  // toDO - add same team player
-			return false;
-		else
-		{
-			x += dirx;
-			y += diry;
-		}
-	}
-	return true;
-}
-
-bool canAttack(Player attacker, Player enemy,double angle,double dist)
-{
-	if ( dist <= MAX_RANGE_ATTACK && !(attacker.getNumOfBullets()==0 && dist > MAX_RANGE_GRANADE))
-	{
-		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
-			return true;
-	}
-	return false;
-}*/
-
 bool haveEyeContact(Player attacker, Player enemy)	// new function - check the printing!!!																	/////
 {
 	int i, j, enemyi, enemyj;
@@ -351,11 +307,11 @@ bool haveEyeContact(Player attacker, Player enemy)	// new function - check the p
 	lengthRow = enemyRow - row;  lengthCol = enemyCol - col;		// distance between players rows and columns in board 600x600
 	distRC = sqrt(pow(lengthRow, 2) + pow(lengthCol, 2));			// mathematical distance between players in board 600x600
 	stepRow = lengthRow / distRC;  stepCol = lengthCol / distRC;		// the step that is done each time in row and in column
-	printf("attacker i = %d , attacker j = %d\n", attacker.getRow(), attacker.getCol());
-	printf("enemy i = %d , enemy j = %d\n", enemy.getRow(), enemy.getCol());
-	printf("start row = %lf , start col = %lf\n", row, col);
-	printf("row length = %lf , col length = %lf , distRC = %lf\n", lengthRow, lengthCol, distRC);
-	printf("row step = %lf , col step = %lf\n", stepRow, stepCol);
+	//printf("attacker i = %d , attacker j = %d\n", attacker.getRow(), attacker.getCol());
+	//printf("enemy i = %d , enemy j = %d\n", enemy.getRow(), enemy.getCol());
+	//printf("start row = %lf , start col = %lf\n", row, col);
+	//printf("row length = %lf , col length = %lf , distRC = %lf\n", lengthRow, lengthCol, distRC);
+	//printf("row step = %lf , col step = %lf\n", stepRow, stepCol);
 	while (i != enemyi || j != enemyj)
 	{
 		col = col + stepCol;
@@ -474,7 +430,7 @@ void playerStorageSaction(int runIndex)
 	int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
 	if (helpId != -1)
 	{
-		doActionPlayer = false;
+
 		/*runPlayer = true;
 		while (runPlayer)
 		{*/
@@ -483,27 +439,42 @@ void playerStorageSaction(int runIndex)
 			if (allPlayers[runIndex].getNumOfMedicine() == 0 && mStorageId != -1) //search for medicine 
 			{
 				movePlayer(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
-				if (doActionPlayer) allPlayers[runIndex].getAmmoFromStorage(medicineStore, mStorageId);
+				//if (doActionPlayer) allPlayers[runIndex].getAmmoFromStorage(medicineStore, mStorageId);
 			}
 			else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
 			{
 				movePlayer(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
-				if (doActionPlayer) allPlayers[runIndex].getAmmoFromStorage(ammoStore, aStorageId);
+		/*		if (doActionPlayer) allPlayers[runIndex].getAmmoFromStorage(ammoStore, aStorageId);*/
 			}
 			else
 			{
-				movePlayer(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
-				if (doActionPlayer)
+				if (canGive(runIndex, helpId))
 				{
 					int heal = MAX_HEALTH - allPlayers[helpId].getHealthPoints();
 					if (heal > allPlayers[runIndex].getNumOfMedicine())
 						heal = allPlayers[runIndex].getNumOfMedicine();
 					allPlayers[runIndex].healPlayer(heal);
 					allPlayers[helpId].heal(heal);
-				};
+				}
+				else movePlayer(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
 			}
 		//}
 	}
+}
+
+bool canGive(int id , int helpId)
+{
+	if (allPlayers[id].getCol() == allPlayers[helpId].getCol())
+	{
+		if (allPlayers[id].getRow() == allPlayers[helpId].getRow() - 1) return true;
+		if (allPlayers[id].getRow() == allPlayers[helpId].getRow() + 1) return true;
+	}
+	if (allPlayers[id].getRow() == allPlayers[helpId].getRow())
+	{
+		if (allPlayers[id].getCol() == allPlayers[helpId].getCol() - 1) return true;
+		if (allPlayers[id].getCol() == allPlayers[helpId].getCol() + 1) return true;
+	}
+	return false;
 }
 
 void DoAction(int runIndex)
@@ -545,20 +516,24 @@ void DoAction(int runIndex)
 	else
 	{
 		printf("\n----------------------------------------------------------- I'm a Squire ------------------------------------------------------\n");
-		//playerStorageSaction(runIndex);
+		playerStorageSaction(runIndex);
 	}
 }
 
 void RunGame()
 {
-	for (int i = 0; i < NUM_TEAM_PLAYERS*2; i++)
-	//for (int i = 1; i < 3; i++)
+	cout << "-----------------------Start round!! ----------- " << endl;
+	ClearMaze();
+	for (int i = 0; i < NUM_TEAM_PLAYERS * 2; i++)
+		//for (int i = 1; i < 3; i++)
 	{
+		allPlayers[i].printPlayer();
 		if (allPlayers[i].isAlive())
 		{
 			DoAction(i);
 		}
 	}
+	cout << "-----------------------End round!! ----------- " << endl;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -945,6 +920,10 @@ void menu(int choice)
 	{
 		runGame = true;
 	}
+	else if (choice == 5)
+	{
+		init();
+	}
 
 }
 
@@ -980,6 +959,7 @@ void main(int argc, char* argv[])
 	glutAddMenuEntry("Throw grenade", 2);
 	glutAddMenuEntry("Create Security Map", 3);
 	glutAddMenuEntry("Start Game", 4);
+	glutAddMenuEntry("Restart Game", 5);
 
 	init();
 
