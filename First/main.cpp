@@ -1,33 +1,30 @@
 #include "glut.h"//
 #include <time.h>//
-#include "Cell.h"
 #include <vector>
 #include <iostream>
-#include "Room.h"
+#include <math.h>
 #include <queue>
+#include <windows.h>
 #include "CompareCells.h"
 #include "Bullet.h"
 #include "Granade.h"
-#include <windows.h>
+#include "Room.h"
 #include "Player.h"
 #include "Storage.h"			
-#include <math.h>
+#include "Cell.h"
+#include "Definitions.h"
 
 //NIR Branch
 using namespace std;
 
 
 
-const int NUM_ROOMS = 12;
-const int NUM_TEAM_PLAYERS = 1; 
-const int STORE_IN_ROOM = 1;
-const int MAX_RANGE_ATTACK = 20;
-const int MIN_RANGE_ATTACK = 0;
+
 
 int maze[MSZ][MSZ] = { 0 };
 double security_map [MSZ][MSZ] = { 0 };
 
-bool runGame = false, runPlayer;
+bool runGame = false, runPlayer, doActionPlayer;
 
 vector <Cell*> grayss[NUM_TEAM_PLAYERS*2];
 Room rooms[NUM_ROOMS];
@@ -116,10 +113,13 @@ void AddPlayerToMaze(int id,int teamNum, int roomIndex)
 	maze[r][c] = teamNum;
 	cout << "r : " << r << ", c : " << c << endl;
 	allPlayers[id].setPosition(r, c);
-	//if (NUM_TEAM_PLAYERS > 1 && id == 0) 
-		//allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
-	//else
-	allPlayers[id].setPlayer(id,0, teamNum); // type=0 is attacker
+	if (NUM_TEAM_PLAYERS > 1 && id% NUM_TEAM_PLAYERS == 0)
+		allPlayers[id].setPlayer(id, 1, teamNum); // type=1 is squire 
+	else
+	{
+		allPlayers[id].setPlayer(id, 0, teamNum); // type=0 is attacker
+		allPlayers[id].setHealthPoints(20);//TODO remove this line
+	}
 	Cell* pc = new Cell(r, c, nullptr,9999.0,0);
 	grayss[id].push_back(pc);
 }
@@ -139,7 +139,8 @@ void ClearMaze(int id, int teamNum)
 		}
 
 	for (i = 0; i < NUM_TEAM_PLAYERS*2; i++) {
-		maze[allPlayers[i].getRow()][allPlayers[i].getCol()] = allPlayers[i].getTeamNum();
+		if (allPlayers[i].isAlive())
+			maze[allPlayers[i].getRow()][allPlayers[i].getCol()] = allPlayers[i].getTeamNum();
 	}
 	// mark out the start and the target cells
 
@@ -193,6 +194,9 @@ void AStarIterationByPoint(int runIndex,int rowT, int colT)
 	if (grayss[runIndex].empty())
 	{
 		cout << "There is no solution\n";
+		runGame = false;
+		runPlayer = false;
+		return;
 	}
 	else // there are gray cells
 	{
@@ -236,10 +240,17 @@ void CheckNeighborByPoint(Cell* pcurrent, int row, int col, int id,int rowT, int
 	{
 		if (row == rowT && col == colT) // the solution has been found
 		{
-			if (pcurrent->GetRow() == rowT && pcurrent->GetColumn() == colT) // 1 step before pacman
+			if (pcurrent->GetRow() == rowT && pcurrent->GetColumn() == colT) // 1 step before enemy
 			{
+				if (allPlayers[id].getType() == 1) //
+				{
+					doActionPlayer = true;
+				}
+				else
+				{
 
 				runGame = false;
+				}
 			}
 
 			//cout << "the solution has been found\n";
@@ -281,7 +292,7 @@ double calcAngleBetweenCells(int centerRow1, int centerCol1, int centerRow2, int
 	return angle;
 }
 
-bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
+/*bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)																		/////
 {
 	double lengthY = enemy.getCol() - attacker.getCol();
 	double lengthX = enemy.getRow() - attacker.getRow();
@@ -321,9 +332,97 @@ bool haveEyeContact(Player attacker, Player enemy,double angle,double dist)					
 
 bool canAttack(Player attacker, Player enemy,double angle,double dist)
 {
-	if ( dist <= MAX_RANGE_ATTACK)
+	if ( dist <= MAX_RANGE_ATTACK && !(attacker.getNumOfBullets()==0 && dist > MAX_RANGE_GRANADE))
 	{
 		//if (haveEyeContact(attacker, enemy, angle,dist)) //TODO need to fix this function (Pass for now)
+			return true;
+	}
+	return false;
+}*/
+
+bool haveEyeContact(Player attacker, Player enemy)	// new function - check the printing!!!																	/////
+{
+	int i, j, enemyi, enemyj;
+	double enemyRow, enemyCol, row, col, lengthRow, lengthCol, distRC, stepRow, stepCol, di, dj;
+	i = attacker.getRow(), j = attacker.getCol();		// (i,j) = (cell row index, cell col index)
+	enemyi = enemy.getRow(), enemyj = enemy.getCol();	// enemy cell indexes
+	row = (H / MSZ) * i; col = (W / MSZ) * j;		// start point (row,col) in board size 600x600
+	enemyRow = (H / MSZ) * enemyi;  enemyCol = (W / MSZ) * enemyj;		// enemy (row,col) in board 600x600
+	lengthRow = enemyRow - row;  lengthCol = enemyCol - col;		// distance between players rows and columns in board 600x600
+	distRC = sqrt(pow(lengthRow, 2) + pow(lengthCol, 2));			// mathematical distance between players in board 600x600
+	stepRow = lengthRow / distRC;  stepCol = lengthCol / distRC;		// the step that is done each time in row and in column
+	printf("attacker i = %d , attacker j = %d\n", attacker.getRow(), attacker.getCol());
+	printf("enemy i = %d , enemy j = %d\n", enemy.getRow(), enemy.getCol());
+	printf("start row = %lf , start col = %lf\n", row, col);
+	printf("row length = %lf , col length = %lf , distRC = %lf\n", lengthRow, lengthCol, distRC);
+	printf("row step = %lf , col step = %lf\n", stepRow, stepCol);
+	while (i != enemyi || j != enemyj)
+	{
+		col = col + stepCol;
+		row = row + stepRow;
+		j = (int)(col / (W / MSZ));
+		i = (int)(row / (H / MSZ));
+		//printf("row = %lf , col = %lf , i = %d , j = %d , cell = %d\n", row, col, i, j, maze[i][j]);
+		if (maze[i][j] == WALL || maze[i][j] == AMMO_STORE || maze[i][j] == MEDICINE_STORE)  // toDO - add same team player
+			return false;
+	}
+	return true;
+}
+
+double moveBack(Player attacker,Player enemy,double dist)
+{
+	printf("---- Moving back... ----\n");
+	double currDist = dist;
+	int count = 0;
+	int lengthRow,lengthCol,row,col,enRow,enCol;
+	row = attacker.getRow(); col = attacker.getCol();
+	enRow = enemy.getRow(); enCol = enemy.getCol();
+	lengthRow = attacker.getRow() - enemy.getRow();
+	lengthCol = attacker.getCol() - enemy.getCol();
+	printf("Attacker cell = (%d,%d) , Enemy cell = (%d, %d) , Distance = %lf , count = %d\n", row, col,enRow, enCol, currDist,count);
+	while (currDist < MIN_RANGE_ATTACK)
+	{
+		row = attacker.getRow(); col = attacker.getCol();
+		lengthRow = attacker.getRow() - enemy.getRow();
+		lengthCol = attacker.getCol() - enemy.getCol();
+		if (maze[row + 1][col] == SPACE && lengthRow >= 0)
+		{
+			maze[row + 1][col] = maze[row][col];
+			attacker.setRow(row + 1);
+		}
+		else if (maze[row - 1][col] == SPACE && lengthRow <= 0)
+		{
+			maze[row - 1][col] = maze[row][col];
+			attacker.setRow(row - 1);
+		}
+		else if (maze[row][col + 1] == SPACE && lengthCol >= 0)
+		{
+			maze[row][col + 1] = maze[row][col];
+			attacker.setCol(col + 1);
+		}
+		else if (maze[row][col - 1] == SPACE && lengthCol <= 0)
+		{
+			maze[row][col - 1] = maze[row][col];
+			attacker.setCol(col - 1);
+		}
+		else
+			break;
+		maze[row][col] = SPACE;
+		row = attacker.getRow(); col = attacker.getCol();
+		lengthRow = attacker.getRow() - enemy.getRow();
+		lengthCol = attacker.getCol() - enemy.getCol();
+		currDist = distanceOfPlayers(attacker, enemy);
+		count++;
+		printf("attacker cell = (%d,%d) , enemy cell = (%d, %d) , distance = %lf , count = %d\n", row, col, enRow, enCol, currDist,count);
+	}
+	return currDist;
+}
+
+bool canAttack(Player attacker, Player enemy, double angle,double dist)		// new function
+{
+	if (dist <= MAX_RANGE_ATTACK && dist >= MIN_RANGE_ATTACK)
+	{
+		if (haveEyeContact(attacker, enemy))
 			return true;
 	}
 	return false;
@@ -331,15 +430,13 @@ bool canAttack(Player attacker, Player enemy,double angle,double dist)
 
 bool isAHit()																				/////
 {
-	bool hit = false;
-	if ((rand() % 100) < 30)
+	if ((rand() % 100) < 101) //TODO change to 40
 	{
-		hit = true;
 		cout << "-----------------it's a hit!!!!!!----------------------\n";
+		return true;
 	}
-	else
-		cout << "---------------------it's a miss!!!!!----------------------\n";
-	return hit;
+	cout << "---------------------it's a miss!!!!!----------------------\n";
+	return false;
 }
 
 double calcAngleBetweenPlayers(int idPlayer, int idEnemy) 
@@ -347,12 +444,12 @@ double calcAngleBetweenPlayers(int idPlayer, int idEnemy)
 	return calcAngleBetweenCells(allPlayers[idPlayer].getRow(), allPlayers[idPlayer].getCol(), allPlayers[idEnemy].getRow(), allPlayers[idEnemy].getCol());
 }
 
-void movePlayer(int runIndex ,int enemyID)
+void movePlayer(int runIndex ,int row,int col)
 {
 	runPlayer = true;
 	while (runPlayer)
 	{
-		AStarIterationByPoint(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
+		AStarIterationByPoint(runIndex, row, col);
 	}
 }
 
@@ -362,10 +459,13 @@ void attackPlayer(int runIndex, int enemyID, int angle , int dist)
 
 	allPlayers[runIndex].attack(maze, security_map, allPlayers, enemyID, angle, dist);
 	if (isAHit())
-		allPlayers[enemyID].isHurt(dist);		// enemy is injured
-	if (allPlayers[enemyID].getHealthPoints() == 0)								// if the attacked player is dead
 	{
-		maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+		allPlayers[enemyID].isHurt(dist);		// enemy is injured
+		if (!allPlayers[enemyID].isAlive())								// if the attacked player is dead
+		{
+			maze[allPlayers[enemyID].getRow()][allPlayers[enemyID].getCol()] = SPACE;		// erase player image from maze
+		}
+	allPlayers[enemyID].printPlayer();
 	}
 }
 
@@ -374,57 +474,80 @@ void playerStorageSaction(int runIndex)
 	int helpId = allPlayers[runIndex].searchToHelp(allPlayers, NUM_TEAM_PLAYERS * 2);
 	if (helpId != -1)
 	{
+		doActionPlayer = false;
+		/*runPlayer = true;
 		while (runPlayer)
-		{
+		{*/
 			int mStorageId = allPlayers[runIndex].searchStorage(medicineStore, NUM_ROOMS * STORE_IN_ROOM);
 			int aStorageId = allPlayers[runIndex].searchStorage(ammoStore, NUM_ROOMS * STORE_IN_ROOM);
 			if (allPlayers[runIndex].getNumOfMedicine() == 0 && mStorageId != -1) //search for medicine 
 			{
-				AStarIterationByPoint(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
-				if (!runPlayer) allPlayers[runIndex].getAmmoFromStorage(medicineStore, mStorageId);
+				movePlayer(runIndex, medicineStore[mStorageId].GetCenterRow(), medicineStore[mStorageId].GetCenterCol());
+				if (doActionPlayer) allPlayers[runIndex].getAmmoFromStorage(medicineStore, mStorageId);
 			}
 			else if (allPlayers[runIndex].getNumOfBullets() + allPlayers[runIndex].getNumOfGranades() == 0 && aStorageId != -1)//search for ammo
 			{
-				AStarIterationByPoint(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
-				if (!runPlayer) allPlayers[runIndex].getAmmoFromStorage(ammoStore, aStorageId);
+				movePlayer(runIndex, ammoStore[aStorageId].GetCenterRow(), ammoStore[aStorageId].GetCenterCol());
+				if (doActionPlayer) allPlayers[runIndex].getAmmoFromStorage(ammoStore, aStorageId);
 			}
-			else AStarIterationByPoint(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
-		}
+			else
+			{
+				movePlayer(runIndex, allPlayers[helpId].getRow(), allPlayers[helpId].getCol()); //search for help
+				if (doActionPlayer)
+				{
+					int heal = MAX_HEALTH - allPlayers[helpId].getHealthPoints();
+					if (heal > allPlayers[runIndex].getNumOfMedicine())
+						heal = allPlayers[runIndex].getNumOfMedicine();
+					allPlayers[runIndex].healPlayer(heal);
+					allPlayers[helpId].heal(heal);
+				};
+			}
+		//}
 	}
 }
 
 void DoAction(int runIndex)
 {
 	int teamNum = getTeamNum(runIndex);
-	int targetTeam= getTeamTarget(runIndex);
-	
-	allPlayers[runIndex].printPlayer();
+	int targetTeam = getTeamTarget(runIndex);
+
+	//allPlayers[runIndex].printPlayer();
 	if (allPlayers[runIndex].getType() == 0) // attacker 
 	{
+		printf("\n----------------------------------------------------------- I'm an Attacker -----------------------------------------------\n");
 		int enemyID = allPlayers[runIndex].searchEnemy(allPlayers, NUM_TEAM_PLAYERS * 2);
 		double angle = calcAngleBetweenPlayers(runIndex, enemyID);
 		double dist = distanceOfPlayers(allPlayers[runIndex], allPlayers[enemyID]);
-		if (allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
+		if (!allPlayers[enemyID].isEmpty()) // Do nothing (move or attack ) 
 		{
 			if (canAttack(allPlayers[runIndex], allPlayers[enemyID],angle,dist))
 			{
-				attackPlayer(runIndex,enemyID, angle, dist);
+				printf("-------------------------------- Can Attack -------------------------------\n");
+				attackPlayer(runIndex, enemyID, angle, dist); //TODO add this line
 			}
 			else
 			{
-				movePlayer(runIndex,enemyID);
+				printf("-------------------------------- Cannot Attack -------------------------------\n");
+				//if (dist < MIN_RANGE_ATTACK)
+				//{
+				//	//dist = moveBack(allPlayers[runIndex], allPlayers[enemyID], dist);
+				//	if (canAttack(allPlayers[runIndex], allPlayers[enemyID], angle, dist))
+				//	{
+				//		printf("-------------------------------- Can Attack -------------------------------\n");
+				//		attackPlayer(runIndex, enemyID, angle, dist);
+				//	}
+				//}
+				//else
+					movePlayer(runIndex, allPlayers[enemyID].getRow(), allPlayers[enemyID].getCol());
 			}
 		}
 	}
 	else
 	{
-		playerStorageSaction(runIndex);	
+		printf("\n----------------------------------------------------------- I'm a Squire ------------------------------------------------------\n");
+		//playerStorageSaction(runIndex);
 	}
 }
-
-
-
-
 
 void RunGame()
 {
@@ -599,6 +722,7 @@ void PaveWay(int i, int j)
 		{
 			cout << "there is no solution: pq is empty\n";
 			go_on = false;
+
 			return;
 		}
 		else // pq is not empty

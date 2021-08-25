@@ -2,10 +2,8 @@
 #include "Granade.h"
 #include "Bullet.h"
 #include "Storage.h"
+#include "Definitions.h"
 
-const int MAX_HEALTH = 100;
-const int MAX_GRANADES = 3;
-const int NUM_PLAYER_BULLETS = 50;
 
 class Player
 {
@@ -19,7 +17,6 @@ private:
 	int numOfGranades;
 	int numOfMedicine;
 	int row, col;
-	double x, y;													//////
 	Granade* granades[MAX_GRANADES];
 	Bullet* bullets[NUM_BULLETS];
 	Bullet* bullet;													//////
@@ -44,15 +41,16 @@ public :
 
 	void move();
 	void heal(int points);
+	void healPlayer(int hp);
 
 	void setPosition(int x, int y);
 	void setPlayer(int id,int  type, int teamNum);
-
+	void setHealthPoints(int hp) { healthPoints = hp; };
+	void setRow(int newRow) { row = newRow; };
+	void setCol(int newCol) { col = newCol; };
 	int getType() { return type; };
 	int getRow() { return row; };
-	int getCol() { return col; };
-	double getX() { return x; };																																//////
-	double getY() { return y; };		
+	int getCol() { return col; };	
 	int getId() { return id; };
 	int getTeamNum() { return teamNum; };
 	int getHealthPoints() { return healthPoints; };
@@ -61,7 +59,7 @@ public :
 	int getNumOfMedicine() { return numOfMedicine; };
 	
 	void attack(int maze[MSZ][MSZ], double map[MSZ][MSZ],Player* allPlayers, int index,double angle,double dist);		//////
-	void isHurt(int distOfShot);
+	void isHurt(double distOfShot);
 	bool isAlive() { return healthPoints > 0; };
 	bool isEmpty();
 	void printPlayer();
