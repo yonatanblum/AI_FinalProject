@@ -14,7 +14,6 @@
 #include "Cell.h"
 #include "Definitions.h"
 
-//NIR Branch
 using namespace std;
 
 
